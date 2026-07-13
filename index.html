@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>سجلّ الدرجات الموحّد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#12213B;
+    --ink-2:#0B1729;
+    --paper:#F6F1E4;
+    --paper-2:#EDE5D0;
+    --gold:#B8935A;
+    --gold-dark:#8C6B3C;
+    --gold-light:#E4CD9D;
+    --text:#1C2333;
+    --text-soft:#5B6478;
+    --stamp-green:#2F6B4F;
+    --stamp-red:#A8433D;
+    --border: rgba(184,147,90,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(180deg, transparent 0 41px, rgba(184,147,90,0.07) 41px 42px),
+      radial-gradient(circle at 20% -10%, #1a2c4d 0%, var(--ink) 45%, var(--ink-2) 100%);
+    background-attachment:fixed;
+    color:var(--paper);
+    font-family:'Inter','Tajawal',sans-serif;
+    min-height:100vh;
+    padding:0 0 80px;
+  }
+  ::selection{background:var(--gold); color:var(--ink-2);}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:.18em;
+    font-size:12px;
+    color:var(--gold-light);
+    text-transform:uppercase;
+  }
+
+  header.hero{
+    max-width:1100px;
+    margin:0 auto;
+    padding:56px 32px 28px;
+    text-align:center;
+  }
+  h1.title{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(34px,5vw,54px);
+    margin:14px 0 10px;
+    color:#FBF7EC;
+    line-height:1.15;
+  }
+  p.subtitle{
+    font-size:16px;
+    color:#C9D2E3;
+    max-width:640px;
+    margin:0 auto;
+    line-height:1.8;
+  }
+
+  .wrap{max-width:1100px;margin:0 auto;padding:0 32px;}
+
+  .card{
+    background:var(--paper);
+    color:var(--text);
+    border-radius:14px;
+    border:1px solid var(--border);
+    box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+
+  /* dropzone */
+  .dropzone{
+    margin-top:28px;
+    padding:38px 24px;
+    border:2px dashed var(--gold-dark);
+    border-radius:16px;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 38px, rgba(140,107,60,0.08) 38px 39px),
+      var(--paper);
+    text-align:center;
+    position:relative;
+    transition:box-shadow .2s ease, transform .15s ease, border-color .2s;
+  }
+  .dropzone.drag{
+    border-color:var(--stamp-green);
+    box-shadow:0 0 0 6px rgba(47,107,79,0.12);
+    transform:scale(1.005);
+  }
+  .dropzone .icon{
+    width:56px;height:56px;margin:0 auto 12px;
+    color:var(--gold-dark);
+  }
+  .dropzone h3{
+    font-family:'Fraunces',serif;
+    font-size:22px;margin:0 0 6px;color:var(--text);
+  }
+  .dropzone p{margin:0 0 18px;color:var(--text-soft);font-size:14px;}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;
+    padding:12px 24px;border-radius:9px;border:none;cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-gold{
+    background:linear-gradient(180deg,var(--gold) 0%, var(--gold-dark) 100%);
+    color:#FFF7E8;
+    box-shadow:0 6px 16px rgba(140,107,60,0.35);
+  }
+  .btn-gold:hover{filter:brightness(1.06);}
+  .btn-ghost{
+    background:transparent;border:1.5px solid var(--gold-dark);color:var(--gold-dark);
+  }
+  .btn-ghost:hover{background:rgba(140,107,60,0.08);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  input[type=file]{display:none;}
+
+  .restore-banner{
+    margin-top:22px;padding:18px 22px;
+    display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;
+    border-color:var(--stamp-green);
+  }
+  .restore-banner .txt h3{
+    font-family:'Fraunces',serif;font-size:17px;margin:0 0 4px;color:var(--text);
+  }
+  .restore-banner .txt p{margin:0;color:var(--text-soft);font-size:13px;}
+  .restore-banner .actions{display:flex;gap:10px;flex:none;}
+
+  .filecount-tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;color:var(--text-soft);margin-top:14px;
+  }
+
+  /* ledger list */
+  .ledger{
+    margin-top:22px;
+    padding:6px 0;
+  }
+  .ledger-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 22px 10px;
+  }
+  .ledger-head h3{
+    font-family:'Fraunces',serif;font-size:20px;margin:0;color:var(--text);
+  }
+  .ledger-actions{display:flex;gap:10px;}
+  .ledger-list{max-height:340px;overflow-y:auto;padding:0 10px 10px;}
+  .row-item{
+    display:grid;
+    grid-template-columns:34px 1fr auto auto;
+    align-items:center;gap:14px;
+    padding:11px 12px;
+    border-bottom:1px solid rgba(28,35,51,0.08);
+    font-size:14px;
+  }
+  .row-item:last-child{border-bottom:none;}
+  .row-num{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-soft);
+  }
+  .row-name{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .row-name b{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row-name span{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--text-soft);}
+  .status{
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;
+    padding:4px 10px;border-radius:20px;white-space:nowrap;
+  }
+  .status.queued{background:#EDE5D0;color:var(--text-soft);}
+  .status.parsing{background:#F4E7C9;color:var(--gold-dark);}
+  .status.done{background:rgba(47,107,79,0.12);color:var(--stamp-green);}
+  .status.error{background:rgba(168,67,61,0.12);color:var(--stamp-red);}
+
+  .stamp{
+    width:30px;height:30px;flex:none;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    border:2px solid transparent;
+    transform:scale(0);
+    transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .stamp.show{transform:scale(1) rotate(-8deg);}
+  .stamp.ok{border-color:var(--stamp-green);color:var(--stamp-green);}
+  .stamp.bad{border-color:var(--stamp-red);color:var(--stamp-red);}
+
+  /* stats */
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px;
+  }
+  .stat{
+    padding:18px 16px;text-align:center;
+  }
+  .stat .num{
+    font-family:'Fraunces',serif;font-size:30px;color:var(--text);font-weight:600;
+  }
+  .stat .lbl{font-size:12.5px;color:var(--text-soft);margin-top:4px;}
+  .stat.warn .num{color:var(--stamp-red);}
+
+  /* tabs + preview */
+  .panel{margin-top:22px;padding:0;}
+  .tabs{display:flex;border-bottom:1px solid var(--border);}
+  .tab{
+    padding:14px 22px;font-weight:600;font-size:14px;color:var(--text-soft);
+    cursor:pointer;border-bottom:2px solid transparent;
+  }
+  .tab.active{color:var(--gold-dark);border-color:var(--gold-dark);}
+  .table-scroll{max-height:360px;overflow:auto;}
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  thead th{
+    position:sticky;top:0;background:var(--paper-2);
+    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;
+    color:var(--text-soft);text-transform:uppercase;letter-spacing:.03em;
+    padding:10px 12px;text-align:right;border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:9px 12px;border-bottom:1px solid rgba(28,35,51,0.06);white-space:nowrap;
+  }
+  tbody tr:hover{background:rgba(184,147,90,0.06);}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .download-bar{
+    margin-top:26px;padding:26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  }
+  .download-bar .txt h3{font-family:'Fraunces',serif;margin:0 0 4px;font-size:20px;color:var(--text);}
+  .download-bar .txt p{margin:0;font-size:13.5px;color:var(--text-soft);}
+  .download-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+  .seal{
+    width:22px;height:22px;
+  }
+
+  footer{
+    text-align:center;margin-top:50px;color:#8A93A8;font-size:12.5px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  @media (max-width:720px){
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .row-item{grid-template-columns:24px 1fr auto;}
+    .row-item .status{display:none;}
+  }
+
+  /* ===== search & transcript ===== */
+  .search-card{margin-top:34px;padding:26px;}
+  .search-card h3{
+    font-family:'Fraunces',serif;font-size:22px;margin:0 0 4px;color:var(--text);
+  }
+  .search-card p.hint{margin:0 0 16px;color:var(--text-soft);font-size:13.5px;}
+  .search-row{display:flex;gap:10px;flex-wrap:wrap;}
+  .search-row input{
+    flex:1;min-width:220px;
+    padding:13px 16px;border-radius:9px;border:1.5px solid var(--border);
+    font-family:'IBM Plex Mono',monospace;font-size:15px;background:#FFFDF8;color:var(--text);
+    outline:none;
+  }
+  .search-row input:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(184,147,90,0.15);}
+  .search-results{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+  .search-result-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:11px 14px;border-radius:9px;background:var(--paper-2);cursor:pointer;
+    border:1px solid transparent;
+  }
+  .search-result-item:hover{border-color:var(--gold-dark);}
+  .search-result-item b{color:var(--text);font-size:14px;}
+  .search-result-item span{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text-soft);}
+  .search-empty{color:var(--stamp-red);font-size:13.5px;margin-top:10px;}
+
+  .transcript-toolbar{
+    display:flex;justify-content:flex-end;gap:10px;margin:24px 0 0;flex-wrap:wrap;
+  }
+
+  #transcriptWrap{margin-top:0;}
+
+  /* ---- Transcript document: monochrome-first, print/PDF-safe, English/LTR ---- */
+  .transcript{
+    background:#FFFFFF;
+    color:#111318;
+    direction:ltr;
+    text-align:left;
+    border-radius:4px;
+    border:1px solid #cfcfcf;
+    box-shadow:0 24px 60px rgba(0,0,0,0.35);
+    padding:40px 42px 30px;
+    margin-top:16px;
+    position:relative;
+    font-size:11.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .transcript::before{
+    content:"";position:absolute;inset:10px;border:1.5px solid #111318;border-radius:2px;pointer-events:none;
+  }
+  .transcript::after{
+    content:"";position:absolute;inset:15px;border:1px solid #c2c2c2;border-radius:2px;pointer-events:none;
+  }
+  
+  .t-head{text-align:center;padding-bottom:13px;border-bottom:3px double #111318;margin-bottom:18px;position:relative;}
+  .t-head .t-eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.26em;color:#555;text-transform:uppercase;
+  }
+  .t-head h2{
+    font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:8px 0 3px;color:#111318;letter-spacing:.015em;
+    overflow-wrap:break-word;word-break:break-word;
+  }
+  .t-head .t-program{font-size:11px;color:#4a4a4a;overflow-wrap:break-word;word-break:break-word;}
+  .t-head .t-title{
+    display:inline-block;margin-top:12px;padding:4px 20px;border:1px solid #111318;border-radius:2px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#111318;letter-spacing:.16em;text-transform:uppercase;
+  }
+
+  /* Student info block now shares the exact table look/width as the semester tables */
+  .t-infoblock table.t-table th:nth-child(1),
+  .t-infoblock table.t-table th:nth-child(2),
+  .t-infoblock table.t-table th:nth-child(3),
+  .t-infoblock table.t-table td:nth-child(1),
+  .t-infoblock table.t-table td:nth-child(2),
+  .t-infoblock table.t-table td:nth-child(3){
+    width:33.333%;
+  }
+  .t-infoblock table.t-table td{ text-align:center; font-size:12px; font-weight:600; }
+  .t-infoblock table.t-table td:nth-child(1){ text-align:center; }
+
+  /* editable fields inside the transcript (name, national ID, DOB, rating) */
+  .transcript [contenteditable="true"]{
+    outline:none;cursor:text;border-radius:2px;border-bottom:1px dashed transparent;
+    transition:background-color .15s, border-color .15s;
+  }
+  .transcript [contenteditable="true"]:hover{
+    border-bottom-color:var(--gold-dark,#8C6B3C); background:rgba(184,147,90,0.08);
+  }
+  .transcript [contenteditable="true"]:focus{
+    border-bottom-color:#111318; background:rgba(184,147,90,0.14);
+  }
+
+  .t-semester{
+    margin-bottom:13px;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .t-semester h4{
+    font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:#111318;
+    display:flex;align-items:baseline;gap:8px;margin:0 0 6px;
+    border-bottom:1px solid #111318;padding-bottom:5px;
+  }
+  .t-semester h4::before{
+    content:"§";font-size:11px;color:#666;font-family:'IBM Plex Mono',monospace;
+  }
+  table.t-table{
+    width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  table.t-table th:nth-child(1), table.t-table td:nth-child(1){width:34%;}
+  table.t-table th:nth-child(2), table.t-table td:nth-child(2){width:14%;}
+  table.t-table th:nth-child(3), table.t-table td:nth-child(3){width:11%;}
+  table.t-table th:nth-child(4), table.t-table td:nth-child(4){width:11%;}
+  table.t-table th:nth-child(5), table.t-table td:nth-child(5){width:11%;}
+  table.t-table th:nth-child(6), table.t-table td:nth-child(6){width:19%;}
+  table.t-table thead{display:table-header-group;}
+  table.t-table tr{break-inside:avoid; page-break-inside:avoid;}
+  table.t-table thead th{
+    background:#f4f4f4;color:#111318;font-size:9px;font-family:'IBM Plex Mono',monospace;
+    padding:6px 8px;text-align:center;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+    border-top:1.5px solid #111318;border-bottom:1.5px solid #111318;
+  }
+  table.t-table thead th:first-child{text-align:left;}
+  table.t-table td{padding:5.5px 8px;text-align:center;border-bottom:1px solid #ddd;word-break:break-word;overflow-wrap:break-word;hyphens:auto;vertical-align:middle;line-height:1.45;}
+  table.t-table td:nth-child(1){text-align:left;}
+  table.t-table tbody tr:nth-child(even) td{background:#fafafa;}
+  tr.t-total td{
+    background:#EFEFEF !important;font-weight:700;color:#111318;border-top:1.5px solid #111318;border-bottom:1.5px solid #111318;
+  }
+
+  .t-summary{
+    margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:#111318;border:1.5px solid #111318;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .t-summary .box{
+    background:#fff;padding:12px 8px 10px;text-align:center;position:relative;
+  }
+  .t-summary .box::before{
+    content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:22px;height:2px;background:#111318;
+  }
+  .t-summary .box .num{font-family:'Fraunces',serif;font-size:19px;font-weight:700;color:#111318;letter-spacing:.01em;}
+  .t-summary .box .lbl{font-size:8.5px;margin-top:4px;color:#555;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+
+  .t-signatures{
+    margin-top:34px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .t-sig{text-align:center;}
+  .t-sig .line{border-top:1px solid #111318;margin:32px 6px 7px;}
+  .t-sig .role{
+    font-size:8.5px;color:#333;font-family:'IBM Plex Mono',monospace;
+    text-transform:uppercase;letter-spacing:.04em;line-height:1.4;
+  }
+
+  .t-foot{
+    margin-top:26px;padding-top:10px;border-top:1px solid #d5d5d5;
+    display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    font-family:'IBM Plex Mono',monospace;font-size:7.8px;color:#8a8a8a;
+    letter-spacing:.03em;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+
+  .t-head, .t-infoblock{ break-inside:avoid; page-break-inside:avoid; }
+
+  .t-page{ transform-origin: top left; position:relative; padding:0 6mm; box-sizing:border-box; }
+
+  /* Mirrors the @media print compaction below — applied only to the hidden
+     offscreen clone used to MEASURE real pixel heights before deciding
+     the page break, so the measurement matches what will actually print. */
+  .print-metrics{ padding:0 4mm; font-size:10.5px; }
+  .print-metrics .t-semester{ margin-bottom:9px; }
+  .print-metrics table.t-table{ font-size:9.8px; line-height:1.5; }
+  .print-metrics table.t-table thead th{ padding:4px 7px; }
+  .print-metrics table.t-table td{ padding:6px 7px; }
+  .print-metrics tr.t-total td{ padding:6px 7px; }
+  .print-metrics .t-signatures{ margin-top:24px; }
+  .print-metrics .t-sig .line{ margin:24px 6px 7px; }
+  .print-metrics .t-foot{ margin-top:18px; padding-top:8px; }
+
+  .t-pagebreak{ page-break-after:always; break-after:page; height:0; margin:0; }
+  .t-page2-head{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid #111318;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:#444;
+    break-inside:avoid; page-break-inside:avoid;
+    break-after:avoid; page-break-after:avoid;
+  }
+
+  @media print{
+    @page{ size:A4; margin:20mm 10mm 12mm 10mm; }
+    body{background:#fff !important;}
+    /* Remove every non-transcript element from the flow entirely (display:none),
+       instead of visibility:hidden — invisible elements still reserve their
+       vertical space and were forcing extra blank printed pages. */
+    header.hero, footer,
+    .wrap > .dropzone, .wrap > .ledger, .wrap > .stats, .wrap > .panel,
+    .wrap > .download-bar, .wrap > .search-card, .wrap > .restore-banner{
+      display:none !important;
+    }
+    #transcriptWrap{
+      display:block !important;
+      position:static; margin:0; padding:0;
+    }
+    .transcript{ box-shadow:none;border:none;padding:0 4mm; font-size:10.5px; }
+    .transcript::before{inset:0;}
+    .transcript::after{display:none;}
+    .transcript-toolbar{display:none;}
+    .t-semester{margin-bottom:9px;}
+    table.t-table{font-size:9.8px;line-height:1.5;}
+    table.t-table thead th{padding:4px 7px;}
+    table.t-table td{padding:6px 7px;}
+    tr.t-total td{padding:6px 7px;}
+    .t-page2-head{padding-top:6mm;}
+    .t-signatures{margin-top:24px;}
+    .t-sig .line{margin:24px 6px 7px;}
+    .t-foot{margin-top:18px;padding-top:8px;}
+    .transcript [contenteditable="true"]{ border-bottom:none !important; background:none !important; }
+  }
+  /* login screen */
+  #loginScreen{
+    position:fixed; inset:0; z-index:9999;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      repeating-linear-gradient(180deg, transparent 0 41px, rgba(184,147,90,0.07) 41px 42px),
+      radial-gradient(circle at 20% -10%, #1a2c4d 0%, var(--ink) 45%, var(--ink-2) 100%);
+    padding:20px;
+  }
+  #loginScreen.hide{ display:none; }
+  .login-card{
+    width:100%; max-width:380px;
+    background:var(--paper);
+    border-radius:16px;
+    border:1px solid var(--border);
+    box-shadow:0 25px 60px rgba(0,0,0,0.45);
+    padding:38px 34px 32px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    animation:loginIn .5s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes loginIn{
+    from{opacity:0; transform:translateY(14px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .login-card::before{
+    content:"";
+    position:absolute; inset:0 0 auto 0; height:5px;
+    background:linear-gradient(90deg,var(--gold) 0%,var(--gold-dark) 50%,var(--gold) 100%);
+  }
+  .login-badge{
+    width:64px;height:64px;margin:0 auto 16px;
+    border-radius:50%;
+    background:linear-gradient(180deg,var(--gold) 0%, var(--gold-dark) 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(140,107,60,0.35);
+  }
+  .login-badge svg{width:28px;height:28px;color:#FFF7E8;}
+  .login-card h2{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:22px; margin:0 0 6px; color:var(--text);
+  }
+  .login-card p.desc{
+    font-size:13px; color:var(--text-soft); margin:0 0 24px; line-height:1.7;
+  }
+  .login-field{
+    position:relative; margin-bottom:14px; text-align:right;
+  }
+  .login-field input{
+    width:100%; padding:13px 16px;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    background:#FFFDF8;
+    color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    letter-spacing:.12em;
+    text-align:center;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .login-field input:focus{
+    border-color:var(--gold-dark);
+    box-shadow:0 0 0 3px rgba(184,147,90,0.18);
+  }
+  .login-card .btn{ width:100%; justify-content:center; margin-top:4px; }
+  .login-error{
+    display:none;
+    margin-top:12px;
+    font-size:12.5px;
+    color:var(--stamp-red);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .login-error.show{ display:block; }
+  .login-card.shake{ animation:loginShake .4s; }
+  @keyframes loginShake{
+    10%,90%{transform:translateX(-1px);}
+    20%,80%{transform:translateX(2px);}
+    30%,50%,70%{transform:translateX(-5px);}
+    40%,60%{transform:translateX(5px);}
+  }
+  #appRoot{ display:none; }
+  #appRoot.show{ display:block; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="card login-card" id="loginCard">
+    <div class="login-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="4" y="10" width="16" height="10" rx="2"/>
+        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+      </svg>
+    </div>
+    <h2>سجلّ الدرجات الموحّد</h2>
+    <p class="desc">هذه الصفحة مخصصة للاستخدام الإداري فقط.<br>الرجاء إدخال كلمة المرور للمتابعة.</p>
+    <form id="loginForm" autocomplete="off">
+      <div class="login-field">
+        <input type="password" id="loginPass" inputmode="numeric" placeholder="••••••••" autocomplete="off">
+      </div>
+      <button type="submit" class="btn btn-gold" style="width:100%;">دخول</button>
+      <p class="login-error" id="loginError">كلمة المرور غير صحيحة، حاول مرة أخرى.</p>
+    </form>
+  </div>
+</div>
+
+<div id="appRoot">
+
+<header class="hero">
+  <div class="eyebrow">أرشيف الشؤون الأكاديمية · كلية التكنولوجيا الصحية التطبيقية</div>
+  <h1 class="title">سجلّ الدرجات الموحّد</h1>
+  <p class="subtitle">ارفع بيانات الدرجات الخاصة بالطلاب (ملفات إكسل) بأي عدد، وسيقوم السجلّ باستخراج كل بيانات كل طالب — الفصول، المقررات، الدرجات، والتقديرات — وتنظيمها في ملف إكسل واحد جاهز لاستخراج بيانات الدرجات لاحقًا.</p>
+</header>
+
+
+<div class="wrap">
+
+  <div class="card restore-banner" id="restoreBanner" style="display:none;">
+    <div class="txt">
+      <h3>📁 تم استرجاع بيانات محفوظة على هذا الجهاز</h3>
+      <p id="restoreBannerText">تم إيجاد نتائج معالجة سابقة محفوظة محليًا داخل المتصفح.</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="discardSavedBtn">حذف المحفوظ وابدأ من جديد</button>
+    </div>
+  </div>
+
+  <div class="card dropzone" id="dropzone">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <path d="M12 3v12m0 0-4-4m4 4 4-4"/>
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+    </svg>
+    <h3>اسحب ملفات الإكسل وأفلتها هنا</h3>
+    <p>يدعم رفع عدد كبير من الملفات دفعة واحدة (.xlsx / .xls)</p>
+    <button class="btn btn-gold" id="browseBtn">اختيار الملفات</button>
+    <input type="file" id="fileInput" multiple accept=".xlsx,.xls">
+    <div class="filecount-tag" id="fileCountTag">لم يتم اختيار ملفات بعد</div>
+  </div>
+
+  <div class="card ledger" id="ledgerCard" style="display:none;">
+    <div class="ledger-head">
+      <h3>قائمة الملفات <span class="mono" style="font-size:13px;color:var(--text-soft);">(<span id="ledgerCount">0</span>)</span></h3>
+      <div class="ledger-actions">
+        <button class="btn btn-ghost" id="clearBtn">مسح الكل</button>
+        <button class="btn btn-gold" id="processBtn">بدء المعالجة</button>
+      </div>
+    </div>
+    <div class="ledger-list" id="ledgerList"></div>
+  </div>
+
+  <div class="stats" id="statsRow" style="display:none;">
+    <div class="card stat"><div class="num" id="statFiles">0</div><div class="lbl">ملف تم رفعه</div></div>
+    <div class="card stat"><div class="num" id="statStudents">0</div><div class="lbl">طالب مستخرج</div></div>
+    <div class="card stat"><div class="num" id="statCourses">0</div><div class="lbl">مقرر / درجة</div></div>
+    <div class="card stat warn"><div class="num" id="statWarn">0</div><div class="lbl">ملاحظات / أخطاء</div></div>
+  </div>
+
+  <div class="card panel" id="previewCard" style="display:none;">
+    <div class="tabs">
+      <div class="tab active" data-tab="summary">ملخص الطلاب</div>
+      <div class="tab" data-tab="details">تفاصيل المقررات</div>
+      <div class="tab" data-tab="issues">الملاحظات والأخطاء</div>
+    </div>
+    <div class="table-scroll" id="tableScroll"></div>
+  </div>
+
+  <div class="card download-bar" id="downloadBar" style="display:none;">
+    <div class="txt">
+      <h3>الملف الموحّد جاهز</h3>
+      <p>يحتوي على شيت «ملخص» وشيت «تفاصيل» لكل طالب ومقرراته، بصيغة إكسل منسّقة.</p>
+    </div>
+    <div class="download-actions">
+      <button class="btn btn-ghost" id="resetBtn">البدء من جديد</button>
+      <button class="btn btn-gold" id="downloadBtn">
+        <svg class="seal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        تحميل الملف الموحّد (Excel)
+      </button>
+    </div>
+  </div>
+
+  <div class="card search-card" id="searchCard" style="display:none;">
+    <h3>🔍 إصدار بيان درجات طالب</h3>
+    <p class="hint">اكتب الرقم القومي (أو جزء منه، أو اسم الطالب) لإصدار بيان درجات رسمي منسّق جاهز للطباعة أو التحميل كـ PDF.</p>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="مثال: 29909242200494 أو اسم الطالب">
+    </div>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <div id="transcriptWrap" style="display:none;">
+    <div class="transcript-toolbar">
+      <button class="btn btn-ghost" id="printBtn">🖨️ طباعة</button>
+      <button class="btn btn-ghost" id="pdfBtn">⬇️ PDF</button>
+      <button class="btn btn-ghost" id="wordBtn">📄 Word</button>
+      <button class="btn btn-gold" id="excelBtn">📊 Excel</button>
+    </div>
+    <div class="transcript" id="transcriptContent"></div>
+  </div>
+
+</div>
+
+<footer>SANAD REGISTRY LEDGER · معالجة تتم بالكامل داخل متصفحك، لا يتم رفع أي بيانات لأي خادم</footer>
+
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const browseBtn = document.getElementById('browseBtn');
+  const fileCountTag = document.getElementById('fileCountTag');
+  const ledgerCard = document.getElementById('ledgerCard');
+  const ledgerList = document.getElementById('ledgerList');
+  const ledgerCount = document.getElementById('ledgerCount');
+  const clearBtn = document.getElementById('clearBtn');
+  const processBtn = document.getElementById('processBtn');
+  const statsRow = document.getElementById('statsRow');
+  const previewCard = document.getElementById('previewCard');
+  const tableScroll = document.getElementById('tableScroll');
+  const downloadBar = document.getElementById('downloadBar');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const searchCard = document.getElementById('searchCard');
+  const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+  const transcriptWrap = document.getElementById('transcriptWrap');
+  const transcriptContent = document.getElementById('transcriptContent');
+  const printBtn = document.getElementById('printBtn');
+  const pdfBtn = document.getElementById('pdfBtn');
+  const wordBtn = document.getElementById('wordBtn');
+  const excelBtn = document.getElementById('excelBtn');
+  const restoreBanner = document.getElementById('restoreBanner');
+  const restoreBannerText = document.getElementById('restoreBannerText');
+  const discardSavedBtn = document.getElementById('discardSavedBtn');
+  let currentTranscriptStudent = null;
+
+  let queue = []; // {id,name,file,status,student,error}
+  let results = []; // parsed student objects
+  let issues = []; // {file, message}
+  let seq = 0;
+
+  const SEMESTER_ORDER = ['First semester','Second semester','Third semester','Fourth semester','Fifth semester','Sixth semester','Seventh semester','Eighth semester','Ninth semester','Tenth semester'];
+  const SEMESTER_AR = {
+    'First semester':'الفصل الأول','Second semester':'الفصل الثاني','Third semester':'الفصل الثالث',
+    'Fourth semester':'الفصل الرابع','Fifth semester':'الفصل الخامس','Sixth semester':'الفصل السادس',
+    'Seventh semester':'الفصل السابع','Eighth semester':'الفصل الثامن','Ninth semester':'الفصل التاسع','Tenth semester':'الفصل العاشر'
+  };
+
+  // ===== Local storage layer (IndexedDB) =====
+  // Persists the processed student records inside the browser itself (no
+  // server, no re-upload needed) so re-opening this same HTML file later —
+  // even after closing the tab or the browser — brings the data straight
+  // back. Uses IndexedDB rather than localStorage because student records
+  // (with all their course rows) can add up in size and IndexedDB has no
+  // practical size ceiling for this use case.
+  const DB_NAME = 'sajl_darajat_db';
+  const DB_STORE = 'sessions';
+  const DB_KEY = 'current';
+  let dbPromise = null;
+
+  function openDb(){
+    if(dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      if(!('indexedDB' in window)){ reject(new Error('IndexedDB غير مدعوم في هذا المتصفح')); return; }
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(DB_STORE); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return dbPromise;
+  }
+
+  async function idbSet(key, value){
+    try{
+      const db = await openDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put(value, key);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }catch(err){ console.error('تعذّر الحفظ محليًا:', err); }
+  }
+
+  async function idbGet(key){
+    try{
+      const db = await openDb();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(DB_STORE, 'readonly');
+        const req = tx.objectStore(DB_STORE).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }catch(err){ console.error('تعذّر القراءة من التخزين المحلي:', err); return null; }
+  }
+
+  async function idbDelete(key){
+    try{
+      const db = await openDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).delete(key);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }catch(err){ console.error('تعذّر حذف التخزين المحلي:', err); }
+  }
+
+  // Dates come back from xlsx parsing as real Date objects; IndexedDB can
+  // store those natively (structured clone), so no manual serialization is
+  // needed like it would be with localStorage/JSON.
+  let saveTimer = null;
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveSessionNow, 400);
+  }
+  async function saveSessionNow(){
+    if(!results.length) return;
+    await idbSet(DB_KEY, {
+      results, issues,
+      fileCount: queue.length,
+      savedAt: new Date().toISOString()
+    });
+  }
+  async function clearSavedSession(){
+    clearTimeout(saveTimer);
+    await idbDelete(DB_KEY);
+  }
+
+  async function tryRestoreSavedSession(){
+    const saved = await idbGet(DB_KEY);
+    if(!saved || !saved.results || !saved.results.length) return;
+    results = saved.results;
+    issues = saved.issues || [];
+    seenNationalIds.clear();
+    results.forEach(s => { if(s.nationalId) seenNationalIds.set(s.nationalId, s.name || ''); });
+
+    const when = saved.savedAt ? new Date(saved.savedAt) : null;
+    const whenTxt = when ? `${String(when.getDate()).padStart(2,'0')}/${String(when.getMonth()+1).padStart(2,'0')}/${when.getFullYear()} — ${String(when.getHours()).padStart(2,'0')}:${String(when.getMinutes()).padStart(2,'0')}` : '';
+    restoreBannerText.textContent = `${results.length} طالب محفوظ من قبل${whenTxt ? ' · آخر حفظ: ' + whenTxt : ''}`;
+    restoreBanner.style.display = 'flex';
+
+    document.getElementById('statFiles').textContent = saved.fileCount || results.length;
+    statsRow.style.display = 'grid';
+    document.getElementById('statStudents').textContent = activeResults().length;
+    document.getElementById('statCourses').textContent = activeResults().reduce((s,r)=>s+r.courses.length,0);
+    document.getElementById('statWarn').textContent = issues.length;
+    previewCard.style.display = 'block';
+    downloadBar.style.display = 'flex';
+    searchCard.style.display = 'block';
+    renderTable('summary');
+  }
+
+  discardSavedBtn.addEventListener('click', async ()=>{
+    await clearSavedSession();
+    results = []; issues = []; seenNationalIds.clear();
+    restoreBanner.style.display = 'none';
+    statsRow.style.display='none';
+    previewCard.style.display='none';
+    downloadBar.style.display='none';
+    searchCard.style.display='none';
+    transcriptWrap.style.display='none';
+  });
+
+  function addFiles(fileList){
+    const arr = Array.from(fileList).filter(f => /\.(xlsx|xls)$/i.test(f.name));
+    arr.forEach(f => {
+      queue.push({id: 'f'+(seq++), name: f.name, file: f, status:'queued', student:null, error:null});
+    });
+    renderLedger();
+  }
+
+  ['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => {
+    e.preventDefault(); dropzone.classList.add('drag');
+  }));
+  ['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => {
+    e.preventDefault(); dropzone.classList.remove('drag');
+  }));
+  dropzone.addEventListener('drop', e => { addFiles(e.dataTransfer.files); });
+  browseBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => { addFiles(e.target.files); fileInput.value=''; });
+
+  clearBtn.addEventListener('click', () => {
+    queue = []; renderLedger();
+  });
+
+  function renderLedger(){
+    fileCountTag.textContent = queue.length ? `${queue.length} ملف في قائمة الرفع` : 'لم يتم اختيار ملفات بعد';
+    ledgerCard.style.display = queue.length ? 'block' : 'none';
+    ledgerCount.textContent = queue.length;
+    ledgerList.innerHTML = queue.map((item,i) => rowHtml(item,i)).join('');
+  }
+
+  function rowHtml(item,i){
+    const statusLabel = {queued:'قيد الانتظار',parsing:'جارٍ الاستخراج…',done:'تم',error:'خطأ'}[item.status];
+    const stampClass = item.status==='done' ? 'show ok' : (item.status==='error' ? 'show bad' : '');
+    const stampIcon = item.status==='error'
+      ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6 6 18"/></svg>'
+      : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg>';
+    return `<div class="row-item">
+      <span class="row-num">${String(i+1).padStart(2,'0')}</span>
+      <span class="row-name">
+        <b>${item.student ? escapeHtml(item.student.name) : escapeHtml(item.name)}</b>
+        <span>${item.student ? (item.student.nationalId ?? '') : item.name}</span>
+      </span>
+      <span class="status ${item.status}">${statusLabel}</span>
+      <span class="stamp ${stampClass}">${stampIcon}</span>
+    </div>`;
+  }
+
+  function escapeHtml(s){
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  processBtn.addEventListener('click', runProcessing);
+
+  async function runProcessing(){
+    processBtn.disabled = true;
+    processBtn.textContent = 'جارٍ المعالجة…';
+    results = []; issues = [];
+    for(let i=0;i<queue.length;i++){
+      const item = queue[i];
+      item.status = 'parsing';
+      renderLedger();
+      await new Promise(r=>setTimeout(r,0));
+      try{
+        const data = await readWorkbook(item.file);
+        const student = parseStudent(data, item.name);
+        if(!student.name){
+          throw new Error('تعذّر العثور على اسم الطالب داخل الملف');
+        }
+        item.student = student;
+        item.status = 'done';
+        results.push(student);
+        if(student.duplicateOf){
+          issues.push({file:item.name, message:`رقم قومي مكرر مع الملف: ${student.duplicateOf}`});
+        }
+        if(student.warnings.length){
+          student.warnings.forEach(w => issues.push({file:item.name, message:w}));
+        }
+      }catch(err){
+        item.status='error';
+        item.error = err.message;
+        issues.push({file:item.name, message: err.message});
+      }
+      renderLedger();
+    }
+    processBtn.disabled = false;
+    processBtn.textContent = 'بدء المعالجة';
+    finalizeResults();
+  }
+
+  function readWorkbook(file){
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = e => {
+        try{
+          const wb = XLSX.read(new Uint8Array(e.target.result), {type:'array', cellDates:true});
+          resolve(wb);
+        }catch(err){ reject(new Error('ملف إكسل غير صالح أو تالف')); }
+      };
+      reader.onerror = () => reject(new Error('تعذّرت قراءة الملف'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  const seenNationalIds = new Map(); // nationalId -> filename
+
+  // Single source of truth for "the real list of students": excludes any record
+  // flagged as a duplicate national ID (student.duplicateOf set). Every place that
+  // renders, searches, or exports student rows must go through this function —
+  // never iterate `results` directly — so a repeated national ID can never leak
+  // into the summary table, details table, Excel export, or search results again.
+  function activeResults(){
+    return results.filter(s => !s.duplicateOf);
+  }
+
+  function norm(v){ return (v===undefined||v===null) ? '' : String(v).trim(); }
+
+  // Overall rating is derived from the percentage, not read verbatim from the source file,
+  // so it's always consistent: 50–65% Acceptable · 65–75% Good · 75–85% Very Good · 85–100% Excellent.
+  function ratingFromPercentage(pct){
+    if(pct == null || isNaN(pct)) return null;
+    if(pct >= 85) return 'Excellent';
+    if(pct >= 75) return 'Very Good';
+    if(pct >= 65) return 'Good';
+    if(pct >= 50) return 'Acceptable';
+    return 'Weak';
+  }
+
+  function parseStudent(workbook, filename){
+    const sheetName = workbook.SheetNames.find(n => /sheet2/i.test(n)) || workbook.SheetNames[0];
+    const ws = workbook.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+
+    const student = {
+      name:null, nationalId:null, dob:null, gender:null,
+      faculty:null, program:null,
+      totalMarks:null, totalCreditHours:null, percentage:null, rating:null,
+      semesters: [], courses: [], warnings: [], sourceFile: filename, duplicateOf:null
+    };
+
+    let currentSemester = null;
+
+    for(let r=0;r<rows.length;r++){
+      const row = rows[r] || [];
+      const c1 = norm(row[1]);
+      const label3 = norm(row[3]);
+
+      if(label3 === 'Name/' && !student.name){
+        student.name = norm(row[4]);
+        if(!student.faculty) student.faculty = c1 || null;
+        const genderVal = norm(row[7]);
+        if(genderVal) student.gender = genderVal;
+      } else if(/^National ID\//i.test(label3) && student.nationalId===null){
+        student.nationalId = row[4] != null ? String(row[4]).trim() : null;
+        if(!student.program) student.program = c1 || null;
+      } else if(/^Date of Birth\//i.test(label3) && student.dob===null){
+        student.dob = row[4] instanceof Date ? row[4] : (row[4] ? String(row[4]) : null);
+      }
+
+      if(c1 && /semester$/i.test(c1) && !/total/i.test(c1)){
+        currentSemester = c1;
+      } else if(c1 === 'Total' && currentSemester){
+        student.semesters.push({
+          semester: currentSemester,
+          totalMarks: typeof row[3]==='number' ? row[3] : null,
+          creditHours: typeof row[6]==='number' ? row[6] : null
+        });
+        currentSemester = null;
+      } else if(currentSemester && c1 && c1 !== 'Course' && typeof row[3] === 'number'){
+        student.courses.push({
+          semester: currentSemester,
+          course: c1,
+          code: norm(row[2]),
+          marks: row[3],
+          grade: norm(row[4]),
+          points: typeof row[5]==='number' ? row[5] : null,
+          creditHours: typeof row[6]==='number' ? row[6] : null
+        });
+      }
+
+      if(c1 === 'Total marks'){
+        student.totalMarks = typeof row[3]==='number' ? row[3] : null;
+        student.totalCreditHours = typeof row[6]==='number' ? row[6] : null;
+      } else if(c1 === 'Percentage'){
+        let val = typeof row[3]==='number' ? row[3] : null;
+        if(val != null){
+          // Excel stores a percentage-formatted cell as a raw 0–1 fraction
+          // under the hood (e.g. 0.8534, displayed as "85.34%"). Reading it
+          // with sheet_to_json returns that raw fraction, not the displayed
+          // number — so without this conversion the value came out 100x
+          // too small (0.85 instead of 85). Detect the cell's actual number
+          // format first; fall back to a plain range check if unavailable.
+          const cellAddr = XLSX.utils.encode_cell({r:r, c:3});
+          const cell = ws[cellAddr];
+          const isPercentFormat = cell && typeof cell.z === 'string' && cell.z.indexOf('%') !== -1;
+          if(isPercentFormat || val <= 1){
+            val = val * 100;
+          }
+        }
+        student.percentage = val;
+      } else if(c1 === 'Rating'){
+        student.rating = norm(row[3]) || null;
+      }
+    }
+
+    // Always compute the rating from the percentage — ignore whatever label was in the source file.
+    student.rating = ratingFromPercentage(student.percentage);
+
+    if(!student.courses.length){
+      student.warnings.push('لم يتم العثور على أي مقررات داخل الملف — تأكد من شكل الملف');
+    }
+    if(student.nationalId){
+      if(seenNationalIds.has(student.nationalId)){
+        student.duplicateOf = seenNationalIds.get(student.nationalId);
+      } else {
+        seenNationalIds.set(student.nationalId, filename);
+      }
+    } else {
+      student.warnings.push('لم يتم العثور على الرقم القومي');
+    }
+    return student;
+  }
+
+  function finalizeResults(){
+    statsRow.style.display = 'grid';
+    document.getElementById('statFiles').textContent = queue.length;
+    document.getElementById('statStudents').textContent = activeResults().length;
+    document.getElementById('statCourses').textContent = activeResults().reduce((s,r)=>s+r.courses.length,0);
+    document.getElementById('statWarn').textContent = issues.length;
+
+    previewCard.style.display = 'block';
+    downloadBar.style.display = 'flex';
+    searchCard.style.display = results.length ? 'block' : 'none';
+    renderTable('summary');
+
+    restoreBanner.style.display = 'none';
+    saveSessionNow();
+  }
+
+  // tabs
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      renderTable(tab.dataset.tab);
+    });
+  });
+
+  function usedSemesterOrder(){
+    const found = new Set();
+    activeResults().forEach(s => s.semesters.forEach(sm => found.add(sm.semester)));
+    const ordered = SEMESTER_ORDER.filter(s => found.has(s));
+    found.forEach(s => { if(!ordered.includes(s)) ordered.push(s); });
+    return ordered;
+  }
+
+  function renderTable(which){
+    if(which==='summary'){
+      const sems = usedSemesterOrder();
+      let head = `<tr><th>الاسم</th><th>الرقم القومي</th><th>تاريخ الميلاد</th><th>النوع</th><th>البرنامج</th>`;
+      sems.forEach(s => head += `<th>${SEMESTER_AR[s]||s} (مجموع)</th>`);
+      head += `<th>إجمالي الدرجات</th><th>إجمالي الساعات</th><th>النسبة٪</th><th>التقدير</th></tr>`;
+      let body = activeResults().map(s=>{
+        let tds = `<td>${escapeHtml(s.name)}</td><td class="mono">${escapeHtml(s.nationalId)}</td><td class="mono">${formatDate(s.dob)}</td><td>${escapeHtml(s.gender)}</td><td>${escapeHtml(s.program)}</td>`;
+        sems.forEach(sem=>{
+          const found = s.semesters.find(x=>x.semester===sem);
+          tds += `<td class="mono">${found?found.totalMarks:''}</td>`;
+        });
+        tds += `<td class="mono">${s.totalMarks??''}</td><td class="mono">${s.totalCreditHours??''}</td><td class="mono">${s.percentage!=null?s.percentage.toFixed(2):''}</td><td>${escapeHtml(s.rating)}</td>`;
+        return `<tr>${tds}</tr>`;
+      }).join('');
+      tableScroll.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    } else if(which==='details'){
+      let head = `<tr><th>الاسم</th><th>الرقم القومي</th><th>الفصل</th><th>المقرر</th><th>الكود</th><th>الساعات المعتمدة</th><th>التقدير</th><th>النقاط</th><th>الدرجة</th></tr>`;
+      let body='';
+      activeResults().forEach(s=>{
+        s.courses.forEach(c=>{
+          body += `<tr><td>${escapeHtml(s.name)}</td><td class="mono">${escapeHtml(s.nationalId)}</td><td>${SEMESTER_AR[c.semester]||c.semester}</td><td>${escapeHtml(c.course)}</td><td class="mono">${escapeHtml(c.code)}</td><td class="mono">${c.creditHours??''}</td><td>${escapeHtml(c.grade)}</td><td class="mono">${c.points??''}</td><td class="mono">${c.marks}</td></tr>`;
+        });
+      });
+      tableScroll.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    } else {
+      let head = `<tr><th>الملف</th><th>الملاحظة</th></tr>`;
+      let body = issues.length ? issues.map(i=>`<tr><td>${escapeHtml(i.file)}</td><td>${escapeHtml(i.message)}</td></tr>`).join('') : `<tr><td colspan="2">لا توجد أي ملاحظات أو أخطاء 🎉</td></tr>`;
+      tableScroll.innerHTML = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    }
+  }
+
+  function formatDate(d){
+    if(!d) return '';
+    if(d instanceof Date){
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    }
+    return String(d);
+  }
+
+  function colLetter(n){
+    let s = '';
+    while(n > 0){
+      const m = (n - 1) % 26;
+      s = String.fromCharCode(65 + m) + s;
+      n = Math.floor((n - 1) / 26);
+    }
+    return s;
+  }
+
+  resetBtn.addEventListener('click', ()=>{
+    queue = []; results = []; issues = []; seenNationalIds.clear();
+    clearSavedSession();
+    restoreBanner.style.display = 'none';
+    ledgerCard.style.display='none';
+    statsRow.style.display='none';
+    previewCard.style.display='none';
+    downloadBar.style.display='none';
+    searchCard.style.display='none';
+    transcriptWrap.style.display='none';
+    searchInput.value=''; searchResults.innerHTML='';
+    fileCountTag.textContent = 'لم يتم اختيار ملفات بعد';
+  });
+
+  downloadBtn.addEventListener('click', buildAndDownload);
+
+  async function buildAndDownload(){
+    downloadBtn.disabled = true;
+    const originalText = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = 'جارٍ التجهيز…';
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'سجلّ الدرجات الموحّد';
+    wb.created = new Date();
+    wb.calcProperties = { fullCalcOnLoad: true };
+
+    const goldFill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFB8935A'} };
+    const headerFont = { color:{argb:'FFFFF7E8'}, bold:true, size:11 };
+    const thinBorder = { style:'thin', color:{argb:'FFD9CBA8'} };
+    const borders = { top:thinBorder,left:thinBorder,right:thinBorder,bottom:thinBorder };
+
+    // Student search sheet - created first so it opens as the default tab
+    const SEARCH_INPUT_CELL = 'B3';
+    const SEARCH_INPUT_ABS = '$B$3';
+    const SEARCH_TABLE_HEADER_ROW = 16;
+    const SEARCH_MAX_COURSES = 100;
+    const searchSheet = wb.addWorksheet('بحث الطالب', {views:[{rightToLeft:true, state:'frozen', ySplit:SEARCH_TABLE_HEADER_ROW}]});
+
+    // Summary sheet
+    const sems = usedSemesterOrder();
+    const summarySheet = wb.addWorksheet('ملخص', {views:[{rightToLeft:true, state:'frozen', ySplit:1}]});
+    const summaryCols = [
+      {header:'الاسم', key:'name', width:26},
+      {header:'الرقم القومي', key:'nid', width:18},
+      {header:'تاريخ الميلاد', key:'dob', width:14},
+      {header:'النوع', key:'gender', width:8},
+      {header:'الكلية', key:'faculty', width:26},
+      {header:'البرنامج', key:'program', width:30},
+      ...sems.map(s=>({header:(SEMESTER_AR[s]||s)+' - مجموع الدرجات', key:'sem_'+s, width:20})),
+      ...sems.map(s=>({header:(SEMESTER_AR[s]||s)+' - الساعات', key:'semh_'+s, width:16})),
+      {header:'إجمالي الدرجات', key:'total', width:16},
+      {header:'إجمالي الساعات المعتمدة', key:'totalh', width:16},
+      {header:'النسبة المئوية', key:'pct', width:14},
+      {header:'التقدير العام', key:'rating', width:12},
+      {header:'ملف المصدر', key:'src', width:26}
+    ];
+    summarySheet.columns = summaryCols;
+    activeResults().forEach(s=>{
+      const rowObj = {
+        name:s.name, nid:s.nationalId, dob: s.dob instanceof Date ? s.dob : (s.dob||''),
+        gender:s.gender, faculty:s.faculty, program:s.program,
+        total:s.totalMarks, totalh:s.totalCreditHours, pct:s.percentage, rating:s.rating, src:s.sourceFile
+      };
+      sems.forEach(sem=>{
+        const found = s.semesters.find(x=>x.semester===sem);
+        rowObj['sem_'+sem] = found ? found.totalMarks : null;
+        rowObj['semh_'+sem] = found ? found.creditHours : null;
+      });
+      summarySheet.addRow(rowObj);
+    });
+    styleHeaderRow(summarySheet, goldFill, headerFont);
+    styleBodyRows(summarySheet, borders);
+    summarySheet.autoFilter = { from:{row:1,column:1}, to:{row:1,column:summaryCols.length} };
+
+    // Details sheet
+    const detailSheet = wb.addWorksheet('تفاصيل', {views:[{rightToLeft:true, state:'frozen', ySplit:1}]});
+    detailSheet.columns = [
+      {header:'الاسم', key:'name', width:26},
+      {header:'الرقم القومي', key:'nid', width:18},
+      {header:'الفصل الدراسي', key:'sem', width:16},
+      {header:'اسم المقرر', key:'course', width:42},
+      {header:'كود المقرر', key:'code', width:14},
+      {header:'الساعات المعتمدة', key:'ch', width:14},
+      {header:'التقدير', key:'grade', width:10},
+      {header:'النقاط', key:'points', width:10},
+      {header:'الدرجة', key:'marks', width:10},
+      {header:'ملف المصدر', key:'src', width:26}
+    ];
+    activeResults().forEach(s=>{
+      s.courses.forEach(c=>{
+        detailSheet.addRow({
+          name:s.name, nid:s.nationalId, sem:SEMESTER_AR[c.semester]||c.semester,
+          course:c.course, code:c.code, marks:c.marks, grade:c.grade, points:c.points, ch:c.creditHours, src:s.sourceFile
+        });
+      });
+    });
+    styleHeaderRow(detailSheet, goldFill, headerFont);
+    styleBodyRows(detailSheet, borders);
+    detailSheet.autoFilter = { from:{row:1,column:1}, to:{row:1,column:10} };
+
+    // Hidden helper column: rank of each matching course row for the national ID
+    // typed in 'بحث الطالب'!B3 (1st match, 2nd match, ...). This lets the search
+    // sheet pull an ordered list of courses using plain INDEX/MATCH (no CSE / no
+    // FILTER() needed, so it works in every Excel version).
+    const lastDetailRow = detailSheet.rowCount;
+    detailSheet.getCell('K1').value = 'ترتيب البحث';
+    for(let r=2; r<=lastDetailRow; r++){
+      detailSheet.getCell('K'+r).value = {
+        formula: `IF($B${r}='بحث الطالب'!${SEARCH_INPUT_ABS},COUNTIFS($B$2:$B${r},'بحث الطالب'!${SEARCH_INPUT_ABS}),"")`
+      };
+    }
+    detailSheet.getColumn(11).hidden = true;
+
+    // ===== Populate the student search sheet =====
+    const nameCol = colLetter(1);
+    const nidCol = colLetter(2);
+    const dobCol = colLetter(3);
+    const genderCol = colLetter(4);
+    const facultyCol = colLetter(5);
+    const programCol = colLetter(6);
+    const totalCol = colLetter(6 + 2*sems.length + 1);
+    const totalhCol = colLetter(6 + 2*sems.length + 2);
+    const pctCol = colLetter(6 + 2*sems.length + 3);
+    const ratingCol = colLetter(6 + 2*sems.length + 4);
+    const srcCol = colLetter(6 + 2*sems.length + 5);
+
+    searchSheet.columns = [
+      {key:'a', width:20},{key:'b', width:34},{key:'c', width:16},
+      {key:'d', width:12},{key:'e', width:12},{key:'f', width:10},{key:'g', width:16}
+    ];
+
+    searchSheet.mergeCells('A1:G1');
+    searchSheet.getCell('A1').value = 'بحث عن طالب برقم قومي';
+    searchSheet.getCell('A1').font = { bold:true, size:16, color:{argb:'FF12213B'} };
+    searchSheet.getCell('A1').alignment = { horizontal:'center', vertical:'middle' };
+    searchSheet.getRow(1).height = 30;
+
+    searchSheet.getCell('A3').value = 'أدخل الرقم القومي هنا:';
+    searchSheet.getCell('A3').font = { bold:true };
+    searchSheet.mergeCells('B3:C3');
+    searchSheet.getCell(SEARCH_INPUT_CELL).font = { bold:true, size:13, color:{argb:'FF8C6B3C'} };
+    searchSheet.getCell(SEARCH_INPUT_CELL).fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF3D6'} };
+    searchSheet.getCell(SEARCH_INPUT_CELL).border = borders;
+    searchSheet.getCell(SEARCH_INPUT_CELL).alignment = { horizontal:'center', vertical:'middle' };
+    searchSheet.getCell(SEARCH_INPUT_CELL).numFmt = '@'; // force Text format so a typed national ID
+    // stays text and matches the text-stored IDs in 'ملخص'/'تفاصيل' (a plain number would never match)
+    searchSheet.getCell('D3').value = '(اكتب الرقم كاملاً ثم اضغط Enter)';
+    searchSheet.getCell('D3').font = { italic:true, size:9, color:{argb:'FF5B6478'} };
+
+    const infoFields = [
+      {row:5,  label:'الاسم',                col:nameCol},
+      {row:6,  label:'تاريخ الميلاد',         col:dobCol,   isDate:true},
+      {row:7,  label:'النوع',                col:genderCol},
+      {row:8,  label:'الكلية',               col:facultyCol},
+      {row:9,  label:'البرنامج',             col:programCol},
+      {row:10, label:'إجمالي الدرجات',        col:totalCol},
+      {row:11, label:'إجمالي الساعات المعتمدة', col:totalhCol},
+      {row:12, label:'النسبة المئوية',        col:pctCol,   isPct:true},
+      {row:13, label:'التقدير العام',         col:ratingCol},
+      {row:14, label:'ملف المصدر',           col:srcCol}
+    ];
+    infoFields.forEach(f=>{
+      searchSheet.getCell('A'+f.row).value = f.label;
+      searchSheet.getCell('A'+f.row).font = { bold:true };
+      searchSheet.mergeCells(`B${f.row}:G${f.row}`);
+      const cell = searchSheet.getCell('B'+f.row);
+      cell.value = {
+        formula: `IFERROR(INDEX(ملخص!$${f.col}:$${f.col},MATCH(${SEARCH_INPUT_ABS},ملخص!$${nidCol}:$${nidCol},0)),"")`
+      };
+      cell.alignment = { horizontal:'right', vertical:'middle' };
+      if(f.isDate) cell.numFmt = 'dd/mm/yyyy';
+      if(f.isPct) cell.numFmt = '0.00"%"';
+    });
+
+    // Courses table
+    const courseHeaders = ['الفصل الدراسي','اسم المقرر','كود المقرر','الساعات المعتمدة','التقدير','النقاط','الدرجة'];
+    const courseHeaderRow = searchSheet.getRow(SEARCH_TABLE_HEADER_ROW);
+    courseHeaders.forEach((h,i)=>{ courseHeaderRow.getCell(i+1).value = h; });
+    courseHeaderRow.eachCell(cell=>{
+      cell.fill = goldFill;
+      cell.font = headerFont;
+      cell.alignment = { vertical:'middle', horizontal:'center', wrapText:true };
+    });
+    courseHeaderRow.height = 26;
+    const detailColsForSearch = ['C','D','E','F','G','H','I']; // sem, course, code, ch, grade, points, marks
+    for(let k=1; k<=SEARCH_MAX_COURSES; k++){
+      const r = SEARCH_TABLE_HEADER_ROW + k;
+      detailColsForSearch.forEach((detailCol, i)=>{
+        searchSheet.getCell(r, i+1).value = {
+          formula: `IFERROR(INDEX(تفاصيل!$${detailCol}:$${detailCol},MATCH(${k},تفاصيل!$K:$K,0)),"")`
+        };
+      });
+    }
+    for(let r=SEARCH_TABLE_HEADER_ROW+1; r<=SEARCH_TABLE_HEADER_ROW+SEARCH_MAX_COURSES; r++){
+      searchSheet.getRow(r).eachCell({includeEmpty:true}, cell=>{
+        cell.border = borders;
+        cell.alignment = { horizontal:'center', vertical:'middle' };
+      });
+      if((r - SEARCH_TABLE_HEADER_ROW) % 2 === 0){
+        searchSheet.getRow(r).eachCell({includeEmpty:true}, cell=>{
+          cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFAF6EC'}};
+        });
+      }
+    }
+    searchSheet.getColumn(2).width = 40;
+
+    // ===== Print setup: A4, always fits in exactly 2 pages =====
+    // Print area covers the header/info block + as many course rows as the
+    // busiest student in this batch actually has (small buffer added), so the
+    // "fit to 2 pages" shrink-to-fit isn't wasted on rows nobody will ever fill.
+    const maxCourseCount = results.length ? Math.max(...results.map(s => s.courses.length)) : 0;
+    const printLastRow = SEARCH_TABLE_HEADER_ROW + Math.min(SEARCH_MAX_COURSES, Math.max(12, maxCourseCount + 2));
+    searchSheet.pageSetup = {
+      paperSize: 9, // 9 = A4
+      orientation: 'portrait',
+      fitToPage: true,
+      fitToWidth: 1,
+      fitToHeight: 2,
+      horizontalCentered: true,
+      margins: { left:0.35, right:0.35, top:0.5, bottom:0.4, header:0.2, footer:0.2 },
+      printArea: `A1:G${printLastRow}`
+    };
+
+    wb.views = [{ activeTab: 0 }]; // open the workbook on the search sheet
+
+    // Issues sheet
+    const issueSheet = wb.addWorksheet('ملاحظات وأخطاء', {views:[{rightToLeft:true, state:'frozen', ySplit:1}]});
+    issueSheet.columns = [
+      {header:'الملف', key:'file', width:34},
+      {header:'الملاحظة', key:'msg', width:60}
+    ];
+    issues.forEach(i => issueSheet.addRow({file:i.file, msg:i.message}));
+    styleHeaderRow(issueSheet, { type:'pattern', pattern:'solid', fgColor:{argb:'FFA8433D'} }, headerFont);
+    styleBodyRows(issueSheet, borders);
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'سجل_الدرجات_الموحد.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    downloadBtn.disabled = false;
+    downloadBtn.innerHTML = originalText;
+  }
+
+  wordBtn.addEventListener('click', ()=>{
+    if(!currentTranscriptStudent) return;
+    exportTranscriptWord(currentTranscriptStudent);
+  });
+
+  excelBtn.addEventListener('click', ()=>{
+    if(!currentTranscriptStudent) return;
+    exportTranscriptExcel(currentTranscriptStudent);
+  });
+
+  function transcriptSemesters(s){
+    return SEMESTER_ORDER.filter(sem => s.semesters.some(x=>x.semester===sem))
+      .concat(s.semesters.map(x=>x.semester).filter(sem => !SEMESTER_ORDER.includes(sem)));
+  }
+
+  // ===== Word export (single-student transcript, opens directly in MS Word) =====
+  function exportTranscriptWord(s){
+    const sems = transcriptSemesters(s);
+    let semestersHtml = '';
+    sems.forEach(sem=>{
+      const courses = s.courses.filter(c=>c.semester===sem);
+      const total = s.semesters.find(x=>x.semester===sem);
+      const rows = courses.map(c=>`
+        <tr>
+          <td>${escapeHtml(c.course)}</td>
+          <td>${escapeHtml(c.code)}</td>
+          <td>${c.creditHours ?? ''}</td>
+          <td>${escapeHtml(c.grade)}</td>
+          <td>${c.points ?? ''}</td>
+          <td>${c.marks}</td>
+        </tr>`).join('');
+      semestersHtml += `
+        <h4 style="font-family:Georgia,serif;font-size:13pt;border-bottom:1px solid #111;padding-bottom:4px;margin:14px 0 6px;">${escapeHtml(sem)}</h4>
+        <table style="width:100%;border-collapse:collapse;font-size:10pt;" cellpadding="4">
+          <thead>
+            <tr style="background:#eee;">
+              <th style="border:1px solid #111;text-align:left;">Course</th>
+              <th style="border:1px solid #111;">Code</th>
+              <th style="border:1px solid #111;">Credit Hrs</th>
+              <th style="border:1px solid #111;">Grade</th>
+              <th style="border:1px solid #111;">Points</th>
+              <th style="border:1px solid #111;">Marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr style="background:#f2f2f2;font-weight:bold;">
+              <td style="border:1px solid #111;" colspan="2">Semester Total</td>
+              <td style="border:1px solid #111;">${total?total.creditHours:''}</td>
+              <td style="border:1px solid #111;"></td>
+              <td style="border:1px solid #111;"></td>
+              <td style="border:1px solid #111;">${total?total.totalMarks:''}</td>
+            </tr>
+          </tbody>
+        </table>`;
+    });
+
+    const html = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset="utf-8"><title>Statement of Grades</title></head>
+      <body style="font-family:Calibri,Arial,sans-serif;direction:ltr;">
+        <div style="text-align:center;border-bottom:3px double #111;padding-bottom:10px;margin-bottom:14px;">
+          <div style="font-size:9pt;letter-spacing:2px;color:#555;text-transform:uppercase;">Statement of Grades</div>
+          <h2 style="font-family:Georgia,serif;margin:6px 0 2px;">${escapeHtml(s.faculty || 'Faculty of Applied Health Sciences Technology')}</h2>
+          <div style="font-size:10pt;color:#444;">${escapeHtml(s.program || '')}</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px;" cellpadding="6">
+          <tr>
+            <td style="border:1px solid #111;"><b>Student Name:</b> ${escapeHtml(s.name)}</td>
+            <td style="border:1px solid #111;"><b>National ID:</b> ${escapeHtml(s.nationalId)}</td>
+            <td style="border:1px solid #111;"><b>Date of Birth:</b> ${formatDate(s.dob)}</td>
+          </tr>
+        </table>
+        ${semestersHtml}
+        <table style="width:100%;border-collapse:collapse;margin-top:16px;" cellpadding="8">
+          <tr style="text-align:center;">
+            <td style="border:1px solid #111;"><b>${s.totalMarks ?? ''}</b><br><span style="font-size:8pt;color:#555;">TOTAL MARKS</span></td>
+            <td style="border:1px solid #111;"><b>${s.totalCreditHours ?? ''}</b><br><span style="font-size:8pt;color:#555;">TOTAL CREDIT HOURS</span></td>
+            <td style="border:1px solid #111;"><b>${s.percentage!=null ? s.percentage.toFixed(2)+'%' : ''}</b><br><span style="font-size:8pt;color:#555;">PERCENTAGE</span></td>
+            <td style="border:1px solid #111;"><b>${escapeHtml(s.rating)}</b><br><span style="font-size:8pt;color:#555;">OVERALL RATING</span></td>
+          </tr>
+        </table>
+        <table style="width:100%;margin-top:30px;" cellpadding="10">
+          <tr style="text-align:center;font-size:9pt;">
+            <td>_____________________<br>Specialist</td>
+            <td>_____________________<br>Director of Graduate Affairs</td>
+            <td>_____________________<br>Vice Dean for Education and Student Affairs</td>
+            <td>_____________________<br>Dean of the Faculty</td>
+          </tr>
+        </table>
+        <p style="text-align:center;font-size:8pt;color:#777;margin-top:20px;">Issued automatically on ${new Date().toLocaleDateString('en-GB')} &nbsp;·&nbsp; Source file: ${escapeHtml(s.sourceFile)}</p>
+      </body>
+      </html>`;
+
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `بيان_درجات_${s.name || s.nationalId}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // ===== Excel export (single-student transcript) =====
+  async function exportTranscriptExcel(s){
+    excelBtn.disabled = true;
+    const original = excelBtn.innerHTML;
+    excelBtn.innerHTML = 'جارٍ التجهيز…';
+    try{
+      const wb = new ExcelJS.Workbook();
+      const sheet = wb.addWorksheet('بيان الدرجات', {views:[{rightToLeft:true}]});
+      const goldFill = { type:'pattern', pattern:'solid', fgColor:{argb:'FFB8935A'} };
+      const headerFont = { bold:true, color:{argb:'FFFFFFFF'} };
+      const borders = {
+        top:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}, bottom:{style:'thin'}
+      };
+
+      sheet.mergeCells('A1:F1');
+      sheet.getCell('A1').value = s.faculty || 'Faculty of Applied Health Sciences Technology';
+      sheet.getCell('A1').font = { bold:true, size:14 };
+      sheet.getCell('A1').alignment = { horizontal:'center' };
+
+      sheet.mergeCells('A2:F2');
+      sheet.getCell('A2').value = `الاسم: ${s.name}    |    الرقم القومي: ${s.nationalId}    |    تاريخ الميلاد: ${formatDate(s.dob)}`;
+      sheet.getCell('A2').alignment = { horizontal:'center' };
+      sheet.addRow([]);
+
+      const headerRow = sheet.addRow(['الفصل الدراسي','اسم المقرر','كود المقرر','الساعات المعتمدة','التقدير','النقاط','الدرجة']);
+      headerRow.eachCell(cell=>{ cell.fill = goldFill; cell.font = headerFont; cell.alignment = {horizontal:'center', vertical:'middle'}; cell.border = borders; });
+
+      const sems = transcriptSemesters(s);
+      sems.forEach(sem=>{
+        const courses = s.courses.filter(c=>c.semester===sem);
+        const total = s.semesters.find(x=>x.semester===sem);
+        courses.forEach(c=>{
+          const row = sheet.addRow([sem, c.course, c.code, c.creditHours ?? '', c.grade, c.points ?? '', c.marks]);
+          row.eachCell(cell=>{ cell.border = borders; cell.alignment = {horizontal:'center'}; });
+        });
+        const totalRow = sheet.addRow([sem+' - إجمالي', '', '', total?total.creditHours:'', '', '', total?total.totalMarks:'']);
+        totalRow.eachCell(cell=>{ cell.border = borders; cell.font = {bold:true}; cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFEFEFEF'}}; cell.alignment = {horizontal:'center'}; });
+      });
+
+      sheet.addRow([]);
+      const summaryHeader = sheet.addRow(['إجمالي الدرجات','إجمالي الساعات المعتمدة','النسبة المئوية','التقدير العام']);
+      summaryHeader.eachCell(cell=>{ cell.fill = goldFill; cell.font = headerFont; cell.alignment = {horizontal:'center'}; cell.border = borders; });
+      const summaryRow = sheet.addRow([
+        s.totalMarks ?? '', s.totalCreditHours ?? '',
+        s.percentage!=null ? s.percentage.toFixed(2)+'%' : '', s.rating || ''
+      ]);
+      summaryRow.eachCell(cell=>{ cell.border = borders; cell.alignment = {horizontal:'center'}; cell.font = {bold:true}; });
+
+      sheet.columns.forEach(col => { col.width = 20; });
+      sheet.getColumn(2).width = 34;
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `بيان_درجات_${s.name || s.nationalId}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      excelBtn.disabled = false;
+      excelBtn.innerHTML = original;
+    }
+  }
+
+  function styleHeaderRow(sheet, fill, font){
+    const row = sheet.getRow(1);
+    row.eachCell(cell=>{
+      cell.fill = fill;
+      cell.font = font;
+      cell.alignment = {vertical:'middle', horizontal:'center', wrapText:true};
+    });
+    row.height = 26;
+  }
+  // ===== search & transcript =====
+  searchInput.addEventListener('input', ()=>{
+    const q = searchInput.value.trim().toLowerCase();
+    transcriptWrap.style.display = 'none';
+    if(!q){ searchResults.innerHTML=''; return; }
+    const matches = activeResults().filter(s =>
+      (s.nationalId && String(s.nationalId).toLowerCase().includes(q)) ||
+      (s.name && s.name.toLowerCase().includes(q))
+    );
+    if(!matches.length){
+      searchResults.innerHTML = '<div class="search-empty">لا يوجد طالب مطابق لهذا البحث</div>';
+      return;
+    }
+    searchResults.innerHTML = matches.slice(0,20).map(s =>
+      `<div class="search-result-item" data-nid="${escapeHtml(s.nationalId)}">
+        <b>${escapeHtml(s.name)}</b><span>${escapeHtml(s.nationalId)}</span>
+      </div>`
+    ).join('');
+    searchResults.querySelectorAll('.search-result-item').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const student = activeResults().find(s => String(s.nationalId)===el.dataset.nid);
+        if(student) showTranscript(student);
+      });
+    });
+  });
+
+  async function showTranscript(student){
+    currentTranscriptStudent = student;
+    transcriptContent.innerHTML = await buildTranscriptHtml(student);
+    transcriptWrap.style.display = 'block';
+    transcriptWrap.scrollIntoView({behavior:'smooth', block:'start'});
+    enableTranscriptEditing();
+  }
+
+  function enableTranscriptEditing(){
+    const numericFields = new Set(['totalMarks','totalCreditHours','percentage']);
+    transcriptContent.querySelectorAll('[data-field]').forEach(el=>{
+      // keep edits as plain single-line text, then sync back into the student object
+      el.addEventListener('input', ()=>{
+        if(!currentTranscriptStudent) return;
+        const field = el.dataset.field;
+        const raw = el.textContent.trim();
+        let value;
+        if(numericFields.has(field)){
+          // store as a real number (like the parsed source data) so exports
+          // (Excel/Word) and any later .toFixed() calls keep working; an
+          // empty or non-numeric entry is treated as "cleared"
+          const num = parseFloat(raw.replace(',', '.'));
+          value = raw === '' || isNaN(num) ? null : num;
+        } else {
+          value = raw;
+        }
+        currentTranscriptStudent[field] = value;
+        // propagate to every other place this field is displayed (page
+        // headers, footers, etc.) so name/national ID stay in sync
+        // wherever they appear across pages
+        transcriptContent.querySelectorAll(`[data-mirror="${field}"]`).forEach(mirror=>{
+          mirror.textContent = raw;
+        });
+        scheduleSave();
+      });
+      el.addEventListener('keydown', e=>{
+        if(e.key === 'Enter'){ e.preventDefault(); el.blur(); }
+      });
+      el.addEventListener('paste', e=>{
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      });
+    });
+  }
+
+  // ===== Page rendering: each logical page (.t-page) is rasterized to a
+  // crisp canvas image sized to the exact A4 printable area. Both the PDF
+  // export and direct printing consume the SAME images, so what you print
+  // is pixel-identical to the PDF — and native browser print pagination
+  // (which a CSS transform:scale can't reliably control, since a transform
+  // doesn't shrink the box's reserved layout space) is bypassed entirely. =====
+  const PAGE_MARGIN_MM = { top:20, bottom:12, side:10 };
+  const PAGE_SIZE_MM = { width:210, height:297 };
+
+  function resetPageWidths(){
+    transcriptContent.querySelectorAll('.t-page').forEach(page => { page.style.width = ''; });
+  }
+
+  async function capturePageImages(){
+    resetPageWidths();
+    const pxPerMm = 96 / 25.4;
+    const usableW = PAGE_SIZE_MM.width - PAGE_MARGIN_MM.side * 2;
+    const usableH = PAGE_SIZE_MM.height - PAGE_MARGIN_MM.top - PAGE_MARGIN_MM.bottom;
+    const usableWidthPx = usableW * pxPerMm;
+
+    const pages = Array.from(transcriptContent.querySelectorAll('.t-page'));
+    const images = [];
+
+    for(const page of pages){
+      // render at natural (unscaled) size, fixed to the exact printable
+      // width so proportions match the physical page
+      page.style.width = usableWidthPx + 'px';
+
+      let canvas;
+      try{
+        canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        });
+      } finally {
+        // always restore the page's natural width, even if html2canvas
+        // throws — otherwise the page is left stuck at the narrower
+        // print-capture width on screen
+        page.style.width = '';
+      }
+
+      let renderW = usableW;
+      let renderH = (canvas.height * renderW) / canvas.width;
+      if(renderH > usableH){
+        const scale = usableH / renderH;
+        renderH = usableH;
+        renderW = renderW * scale;
+      }
+      images.push({ src: canvas.toDataURL('image/jpeg', 0.98), w: renderW, h: renderH });
+    }
+    return images;
+  }
+
+  async function buildTranscriptHtml(s){
+    const sems = SEMESTER_ORDER.filter(sem => s.semesters.some(x=>x.semester===sem))
+      .concat(s.semesters.map(x=>x.semester).filter(sem => !SEMESTER_ORDER.includes(sem)));
+
+    function renderSemester(sem){
+      const courses = s.courses.filter(c=>c.semester===sem);
+      const total = s.semesters.find(x=>x.semester===sem);
+      const rows = courses.map(c => `
+        <tr>
+          <td>${escapeHtml(c.course)}</td>
+          <td class="mono">${escapeHtml(c.code)}</td>
+          <td>${c.creditHours ?? ''}</td>
+          <td>${escapeHtml(c.grade)}</td>
+          <td>${c.points ?? ''}</td>
+          <td>${c.marks}</td>
+        </tr>`).join('');
+      return `
+        <div class="t-semester">
+          <h4>${escapeHtml(sem)}</h4>
+          <table class="t-table">
+            <thead><tr><th>Course</th><th>Code</th><th>Credit Hrs</th><th>Grade</th><th>Points</th><th>Marks</th></tr></thead>
+            <tbody>
+              ${rows}
+              <tr class="t-total"><td colspan="2">Semester Total</td><td>${total?total.creditHours:''}</td><td></td><td></td><td>${total?total.totalMarks:''}</td></tr>
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    const headHtml = `
+      <div class="t-head">
+        <div class="t-eyebrow">Statement of Grades</div>
+        <h2>${escapeHtml(s.faculty || 'Faculty of Applied Health Sciences Technology')}</h2>
+        <div class="t-program" contenteditable="true" spellcheck="false" data-field="program">${escapeHtml(s.program || '')}</div>
+      </div>
+      <div class="t-semester t-infoblock">
+        <h4>Student Information</h4>
+        <table class="t-table">
+          <thead><tr><th>Student Name</th><th>National ID</th><th>Date of Birth</th></tr></thead>
+          <tbody>
+            <tr>
+              <td contenteditable="true" spellcheck="false" data-field="name">${escapeHtml(s.name)}</td>
+              <td class="mono" contenteditable="true" spellcheck="false" data-field="nationalId">${escapeHtml(s.nationalId)}</td>
+              <td contenteditable="true" spellcheck="false" data-field="dob">${formatDate(s.dob)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    const summaryHtml = `
+      <div class="t-summary">
+        <div class="box"><div class="num" contenteditable="true" spellcheck="false" inputmode="decimal" data-field="totalMarks">${s.totalMarks ?? ''}</div><div class="lbl">Total Marks</div></div>
+        <div class="box"><div class="num" contenteditable="true" spellcheck="false" inputmode="decimal" data-field="totalCreditHours">${s.totalCreditHours ?? 130}</div><div class="lbl">Total Credit Hours</div></div>
+        <div class="box"><div class="num"><span contenteditable="true" spellcheck="false" inputmode="decimal" data-field="percentage">${s.percentage!=null ? s.percentage.toFixed(2) : ''}</span>%</div><div class="lbl">Percentage</div></div>
+        <div class="box"><div class="num" contenteditable="true" spellcheck="false" data-field="rating">${escapeHtml(s.rating)}</div><div class="lbl">Overall Rating</div></div>
+      </div>`;
+
+    const signaturesHtml = `
+      <div class="t-signatures">
+        <div class="t-sig"><div class="line"></div><div class="role">Graduates Affairs Officer</div></div>
+        <div class="t-sig"><div class="line"></div><div class="role">Vice Dean for Education and Student Affairs</div></div>
+        <div class="t-sig"><div class="line"></div><div class="role">Dean of the Faculty</div></div>
+      </div>`;
+
+    const genDate = (()=>{ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${mm}-${dd}`; })();
+    const footHtml = (pageNum, totalPages) => `
+      <div class="t-foot">
+        <span>Doc. Ref: <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span> · Generated ${genDate}</span>
+        <span>Page ${pageNum} of ${totalPages}</span>
+      </div>`;
+
+    const pageHeadHtml = (pageNum, totalPages) => `<div class="t-page2-head"><span><span class="mirror-field" data-mirror="name">${escapeHtml(s.name)}</span> &nbsp;·&nbsp; <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span></span><span>Page ${pageNum} of ${totalPages}</span></div>`;
+
+    const semesterHtmls = sems.map(renderSemester);
+
+    // ---- Dynamic pagination ----
+    // The layout used to be hardcoded as "semesters 1-5 on page 1, the rest
+    // on page 2". A student with more course rows than that would overflow
+    // page 1's real printable height, and capturePageImages() would then
+    // shrink that whole page's captured image down to force it into the
+    // page — which is exactly why page 1 looked visibly smaller than page 2
+    // when printing/exporting. Instead we now measure the real rendered
+    // height of each block offscreen and split pages wherever the content
+    // actually fills up, so nothing ever needs to be shrunk to fit.
+    const pages = await paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, footHtml, pageHeadHtml });
+
+    const pagesHtml = pages.map((p, idx) => `
+      <div class="t-page" data-page="${idx + 1}">
+        ${pageHeadHtml(idx + 1, pages.length)}
+        ${p.isFirst ? headHtml : ''}
+        ${p.blocks.join('')}
+        ${footHtml(idx + 1, pages.length)}
+      </div>`).join('<div class="t-pagebreak"></div>');
+
+    return `<div dir="ltr">${pagesHtml}</div>`;
+  }
+
+  async function ensureFontsReady(){
+    if(document.fonts && document.fonts.ready){
+      try{ await document.fonts.ready; }catch(e){ /* ignore */ }
+    }
+  }
+
+  // Splits semester blocks (plus the trailing summary/signature blocks)
+  // across as many pages as are actually needed, by rendering into a
+  // hidden offscreen page at the exact printable width used later by
+  // capturePageImages(), and watching the real offsetHeight — instead of
+  // assuming a fixed number of blocks fit on each page.
+  async function paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, footHtml, pageHeadHtml }){
+    await ensureFontsReady();
+
+    const pxPerMm = 96 / 25.4;
+    const usableW = PAGE_SIZE_MM.width - PAGE_MARGIN_MM.side * 2;
+    const usableH = PAGE_SIZE_MM.height - PAGE_MARGIN_MM.top - PAGE_MARGIN_MM.bottom;
+    const usableWidthPx = usableW * pxPerMm;
+    const usableHeightPx = usableH * pxPerMm;
+
+    const root = document.createElement('div');
+    root.className = 'transcript';
+    root.style.cssText = `position:absolute; visibility:hidden; pointer-events:none; left:-99999px; top:0; margin:0; padding:0; border:none; box-shadow:none; width:${usableWidthPx}px;`;
+    document.body.appendChild(root);
+
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 't-page';
+    root.appendChild(pageDiv);
+
+    function appendHtml(html){
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      const nodes = Array.from(tmp.childNodes);
+      nodes.forEach(n => pageDiv.appendChild(n));
+      return nodes;
+    }
+    function removeNodes(nodes){
+      nodes.forEach(n => { if(n.parentNode) n.parentNode.removeChild(n); });
+    }
+
+    // constant footer height, reserved on every page's budget
+    pageDiv.innerHTML = '';
+    appendHtml(footHtml(1, 1));
+    const footH = pageDiv.offsetHeight;
+
+    let isFirstPage = true;
+    let pageBlocks = [];
+    const pages = [];
+
+    function startFreshPage(){
+      pageDiv.innerHTML = '';
+      appendHtml(pageHeadHtml(1, 1));
+      if(isFirstPage) appendHtml(headHtml);
+    }
+    startFreshPage();
+
+    let i = 0;
+    while(i < semesterHtmls.length){
+      const nodes = appendHtml(semesterHtmls[i]);
+      const fits = pageDiv.offsetHeight <= (usableHeightPx - footH);
+      if(!fits && pageBlocks.length > 0){
+        removeNodes(nodes);
+        pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
+        isFirstPage = false;
+        pageBlocks = [];
+        startFreshPage();
+        continue; // retry the same semester on the fresh page
+      }
+      pageBlocks.push(semesterHtmls[i]);
+      i++;
+    }
+
+    // try to fit the summary + signatures onto the last page too
+    const tailHtml = summaryHtml + signaturesHtml;
+    const tailNodes = appendHtml(tailHtml);
+    const tailFits = pageDiv.offsetHeight <= (usableHeightPx - footH);
+    if(!tailFits && pageBlocks.length > 0){
+      removeNodes(tailNodes);
+      pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
+      isFirstPage = false;
+      pageBlocks = [tailHtml];
+    } else {
+      pageBlocks.push(tailHtml);
+    }
+    pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
+
+    document.body.removeChild(root);
+    return pages;
+  }
+
+  printBtn.addEventListener('click', async ()=>{
+    printBtn.disabled = true;
+    const original = printBtn.innerHTML;
+    printBtn.innerHTML = 'جارٍ التجهيز…';
+    try{
+      const images = await capturePageImages();
+
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+      document.body.appendChild(iframe);
+
+      const pagesHtml = images.map(img => `
+        <div class="pg"><img src="${img.src}" style="width:${img.w}mm;height:${img.h}mm;"></div>
+      `).join('');
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>
+          @page{ size:A4; margin:${PAGE_MARGIN_MM.top}mm ${PAGE_MARGIN_MM.side}mm ${PAGE_MARGIN_MM.bottom}mm ${PAGE_MARGIN_MM.side}mm; }
+          *{ margin:0; padding:0; box-sizing:border-box; }
+          body{ background:#fff; }
+          .pg{ width:100%; display:flex; justify-content:center; page-break-after:always; }
+          .pg:last-child{ page-break-after:auto; }
+          .pg img{ display:block; }
+        </style>
+      </head><body>${pagesHtml}</body></html>`);
+      doc.close();
+
+      iframe.onload = () => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      };
+      // Firefox/Safari sometimes fire onload before images finish decoding
+      setTimeout(()=>{
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 300);
+
+      const cleanup = () => { if(iframe.parentNode) iframe.parentNode.removeChild(iframe); };
+      iframe.contentWindow.addEventListener('afterprint', cleanup);
+      setTimeout(cleanup, 15000); // safety net in case afterprint never fires
+    } catch(err){
+      console.error(err);
+      resetPageWidths();
+    } finally {
+      printBtn.disabled = false;
+      printBtn.innerHTML = original;
+    }
+  });
+
+  pdfBtn.addEventListener('click', async ()=>{
+    pdfBtn.disabled = true;
+    const original = pdfBtn.innerHTML;
+    pdfBtn.innerHTML = 'جارٍ التجهيز…';
+    try{
+      const images = await capturePageImages();
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
+
+      images.forEach((img, i) => {
+        const usableW = PAGE_SIZE_MM.width - PAGE_MARGIN_MM.side * 2;
+        const xOffset = PAGE_MARGIN_MM.side + (usableW - img.w) / 2;
+        if(i > 0) pdf.addPage();
+        pdf.addImage(img.src, 'JPEG', xOffset, PAGE_MARGIN_MM.top, img.w, img.h);
+      });
+
+      pdf.save('بيان_درجات.pdf');
+    } catch(err){
+      console.error(err);
+      resetPageWidths();
+    } finally {
+      pdfBtn.disabled = false;
+      pdfBtn.innerHTML = original;
+    }
+  });
+
+  function styleBodyRows(sheet, borders){
+    sheet.eachRow((row, idx)=>{
+      if(idx===1) return;
+      row.eachCell(cell=>{
+        cell.border = borders;
+        cell.alignment = {vertical:'middle', horizontal:'center'};
+      });
+      if(idx % 2 === 0){
+        row.eachCell(cell=>{ cell.fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FFFAF6EC'}}; });
+      }
+    });
+  }
+
+  // On load, silently check whether a previous session was saved locally
+  // in this browser and offer it back instead of asking the user to
+  // re-upload their files.
+  tryRestoreSavedSession();
+})();
+</script>
+
+</div>
+
+<script>
+(function(){
+  const CORRECT_PASSWORD = "0000000";
+  const SESSION_KEY = "gradesRegistryAuthed";
+
+  const loginScreen = document.getElementById('loginScreen');
+  const loginCard   = document.getElementById('loginCard');
+  const loginForm   = document.getElementById('loginForm');
+  const loginPass   = document.getElementById('loginPass');
+  const loginError  = document.getElementById('loginError');
+  const appRoot     = document.getElementById('appRoot');
+
+  function grantAccess(){
+    loginScreen.classList.add('hide');
+    appRoot.classList.add('show');
+  }
+
+  // إذا كان الدخول قد تم بالفعل في هذه الجلسة، لا داعي لطلبه مجددًا
+  if(sessionStorage.getItem(SESSION_KEY) === "1"){
+    grantAccess();
+  } else {
+    setTimeout(()=> loginPass.focus(), 200);
+  }
+
+  loginForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(loginPass.value === CORRECT_PASSWORD){
+      sessionStorage.setItem(SESSION_KEY, "1");
+      grantAccess();
+    } else {
+      loginError.classList.add('show');
+      loginCard.classList.remove('shake');
+      void loginCard.offsetWidth; // إعادة تشغيل الأنيميشن
+      loginCard.classList.add('shake');
+      loginPass.value = "";
+      loginPass.focus();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

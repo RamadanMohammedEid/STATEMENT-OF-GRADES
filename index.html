@@ -303,7 +303,7 @@
     content:"";position:absolute;inset:15px;border:1px solid #c2c2c2;border-radius:2px;pointer-events:none;
   }
   
-  .t-head{text-align:center;padding-bottom:13px;border-bottom:3px double #111318;margin-bottom:18px;position:relative;}
+  .t-head{text-align:center;padding-top:14mm;padding-bottom:13px;margin-bottom:18px;position:relative;}
   .t-head .t-eyebrow{
     font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.26em;color:#555;text-transform:uppercase;
   }
@@ -436,6 +436,7 @@
     break-inside:avoid; page-break-inside:avoid;
     break-after:avoid; page-break-after:avoid;
   }
+  .t-page2-head.no-line{ border-bottom:none; }
 
   @media print{
     @page{ size:A4; margin:20mm 10mm 12mm 10mm; }
@@ -466,116 +467,259 @@
     .t-sig .line{margin:24px 6px 7px;}
     .t-foot{margin-top:18px;padding-top:8px;}
     .transcript [contenteditable="true"]{ border-bottom:none !important; background:none !important; }
+    #loginGate{ display:none !important; }
   }
-  /* login screen */
-  #loginScreen{
+
+  /* ===== Login gate ===== */
+  body.locked > header.hero, body.locked > .wrap, body.locked > footer{ display:none !important; }
+
+  #loginGate{
     position:fixed; inset:0; z-index:9999;
     display:flex; align-items:center; justify-content:center;
     background:
       repeating-linear-gradient(180deg, transparent 0 41px, rgba(184,147,90,0.07) 41px 42px),
       radial-gradient(circle at 20% -10%, #1a2c4d 0%, var(--ink) 45%, var(--ink-2) 100%);
     padding:20px;
-  }
-  #loginScreen.hide{ display:none; }
-  .login-card{
-    width:100%; max-width:380px;
-    background:var(--paper);
-    border-radius:16px;
-    border:1px solid var(--border);
-    box-shadow:0 25px 60px rgba(0,0,0,0.45);
-    padding:38px 34px 32px;
-    text-align:center;
-    position:relative;
     overflow:hidden;
-    animation:loginIn .5s cubic-bezier(.2,.8,.2,1);
   }
-  @keyframes loginIn{
-    from{opacity:0; transform:translateY(14px) scale(.98);}
-    to{opacity:1; transform:translateY(0) scale(1);}
+  #loginGate.hidden{ display:none; }
+
+  .lg-ornament{
+    position:absolute; width:220px; height:220px;
+    border:1px solid var(--border); border-radius:50%;
+    pointer-events:none; opacity:.35;
+  }
+  .lg-ornament.tl{ top:-90px; right:-90px; }
+  .lg-ornament.br{ bottom:-90px; left:-90px; }
+  .lg-ornament::after{ content:''; position:absolute; inset:24px; border:1px solid var(--border); border-radius:50%; }
+
+  .lg-stage{ width:100%; max-width:400px; position:relative; z-index:1; animation:loginIn .5s ease; }
+  @keyframes loginIn{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .lg-eyebrow{
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.18em; font-size:12px;
+    color:var(--gold-light); text-transform:uppercase; text-align:center; display:block; margin-bottom:14px;
+  }
+  .lg-brand{ text-align:center; margin-bottom:26px; }
+  .lg-brand .lg-seal{
+    width:60px; height:60px; margin:0 auto 14px; border-radius:50%;
+    border:1.5px solid var(--gold); display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 30% 20%, rgba(184,147,90,0.18), transparent 70%);
+    box-shadow:0 0 0 6px rgba(184,147,90,0.08);
+  }
+  .lg-brand .lg-seal svg{ width:26px; height:26px; color:var(--gold-light); }
+  .lg-brand h2{
+    font-family:'Fraunces',serif; font-weight:600; font-size:clamp(22px,4vw,28px);
+    margin:0 0 8px; color:#FBF7EC; line-height:1.25;
+  }
+  .lg-brand p{ font-size:13.5px; color:#C9D2E3; margin:0; line-height:1.7; }
+
+  .login-card{
+    background:var(--paper); color:var(--text); border-radius:16px;
+    border:1px solid var(--border); box-shadow:0 24px 60px rgba(0,0,0,0.4);
+    padding:32px 28px 26px; position:relative; overflow:hidden;
   }
   .login-card::before{
-    content:"";
-    position:absolute; inset:0 0 auto 0; height:5px;
-    background:linear-gradient(90deg,var(--gold) 0%,var(--gold-dark) 50%,var(--gold) 100%);
+    content:''; position:absolute; inset:0 0 auto 0; height:4px;
+    background:linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light), var(--gold));
   }
-  .login-badge{
-    width:64px;height:64px;margin:0 auto 16px;
-    border-radius:50%;
-    background:linear-gradient(180deg,var(--gold) 0%, var(--gold-dark) 100%);
-    display:flex;align-items:center;justify-content:center;
-    box-shadow:0 8px 20px rgba(140,107,60,0.35);
-  }
-  .login-badge svg{width:28px;height:28px;color:#FFF7E8;}
-  .login-card h2{
-    font-family:'Fraunces',serif; font-weight:600;
-    font-size:22px; margin:0 0 6px; color:var(--text);
-  }
-  .login-card p.desc{
-    font-size:13px; color:var(--text-soft); margin:0 0 24px; line-height:1.7;
-  }
-  .login-field{
-    position:relative; margin-bottom:14px; text-align:right;
-  }
-  .login-field input{
-    width:100%; padding:13px 16px;
-    border:1.5px solid var(--border);
-    border-radius:10px;
-    background:#FFFDF8;
-    color:var(--text);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:15px;
-    letter-spacing:.12em;
-    text-align:center;
-    outline:none;
-    transition:border-color .15s, box-shadow .15s;
-  }
-  .login-field input:focus{
-    border-color:var(--gold-dark);
-    box-shadow:0 0 0 3px rgba(184,147,90,0.18);
-  }
-  .login-card .btn{ width:100%; justify-content:center; margin-top:4px; }
-  .login-error{
-    display:none;
-    margin-top:12px;
-    font-size:12.5px;
-    color:var(--stamp-red);
-    font-family:'IBM Plex Mono',monospace;
-  }
-  .login-error.show{ display:block; }
-  .login-card.shake{ animation:loginShake .4s; }
+  .login-card.shake{ animation:loginShake .4s ease; }
   @keyframes loginShake{
-    10%,90%{transform:translateX(-1px);}
-    20%,80%{transform:translateX(2px);}
-    30%,50%,70%{transform:translateX(-5px);}
-    40%,60%{transform:translateX(5px);}
+    10%,90%{ transform:translateX(-1px); } 20%,80%{ transform:translateX(2px); }
+    30%,50%,70%{ transform:translateX(-6px); } 40%,60%{ transform:translateX(6px); }
   }
-  #appRoot{ display:none; }
-  #appRoot.show{ display:block; }
+
+  .lg-field{ margin-bottom:16px; }
+  .lg-field label{
+    display:block; font-size:13px; font-weight:600; color:var(--text-soft);
+    margin-bottom:8px; font-family:'Tajawal','Inter',sans-serif;
+  }
+  .lg-pass-wrap{ position:relative; }
+  .lg-pass-wrap input{
+    width:100%; padding:14px 46px; border-radius:10px; border:1.5px solid var(--border);
+    background:#FFFDF7; color:var(--text); font-family:'IBM Plex Mono',monospace;
+    font-size:18px; letter-spacing:.35em; text-align:center; outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .lg-pass-wrap input:focus{ border-color:var(--gold); box-shadow:0 0 0 4px rgba(184,147,90,0.15); }
+  .lg-pass-wrap input::placeholder{ letter-spacing:normal; font-family:'Tajawal','Inter',sans-serif; font-size:13.5px; color:#A9AF9F; }
+  .lg-pass-wrap .lg-icon-lock{
+    position:absolute; right:14px; top:50%; transform:translateY(-50%);
+    width:18px; height:18px; color:var(--gold-dark); pointer-events:none;
+  }
+  .lg-pass-wrap .lg-toggle-eye{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; cursor:pointer; color:var(--text-soft); border-radius:8px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .lg-pass-wrap .lg-toggle-eye:hover{ background:rgba(140,107,60,0.08); color:var(--gold-dark); }
+  .lg-pass-wrap .lg-toggle-eye svg{ width:18px; height:18px; }
+
+  .lg-error-msg{
+    display:none; align-items:center; gap:8px; margin-top:10px; padding:10px 12px;
+    border-radius:8px; background:rgba(168,67,61,0.1); color:var(--stamp-red);
+    font-size:12.5px; font-family:'Tajawal','Inter',sans-serif;
+  }
+  .lg-error-msg.show{ display:flex; }
+
+  .lg-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:'Inter','Tajawal',sans-serif; font-weight:700; font-size:15px;
+    padding:14px 24px; border-radius:10px; border:none; cursor:pointer; margin-top:6px;
+    background:linear-gradient(180deg,var(--gold) 0%, var(--gold-dark) 100%);
+    color:#FFF7E8; box-shadow:0 8px 20px rgba(140,107,60,0.35);
+    transition:transform .12s ease, box-shadow .12s ease, filter .12s;
+  }
+  .lg-btn:hover{ filter:brightness(1.06); }
+  .lg-btn:active{ transform:translateY(1px); }
+  .lg-btn:disabled{ opacity:.6; cursor:not-allowed; }
+  .lg-btn svg{ width:17px; height:17px; }
+
+  .lg-hint{
+    text-align:center; margin-top:16px; font-size:11.5px; color:var(--text-soft);
+    font-family:'IBM Plex Mono',monospace; letter-spacing:.02em;
+  }
+  .lg-foot{ text-align:center; margin-top:24px; font-size:12px; color:#8290A8; }
+
+  .lg-success-overlay{
+    position:fixed; inset:0;
+    background:radial-gradient(circle at 50% 40%, rgba(47,107,79,0.18), rgba(11,23,41,0.92));
+    display:none; align-items:center; justify-content:center; z-index:10000;
+    flex-direction:column; gap:16px; backdrop-filter:blur(3px);
+  }
+  .lg-success-overlay.show{ display:flex; }
+  .lg-success-overlay .lg-stamp{
+    width:78px; height:78px; border-radius:50%; border:2.5px solid var(--stamp-green);
+    color:var(--stamp-green); display:flex; align-items:center; justify-content:center;
+    transform:scale(0); animation:lgPop .45s cubic-bezier(.34,1.56,.64,1) forwards;
+  }
+  .lg-success-overlay .lg-stamp svg{ width:36px; height:36px; }
+  @keyframes lgPop{ to{ transform:scale(1) rotate(-6deg); } }
+  .lg-success-overlay p{ font-family:'Fraunces',serif; font-size:20px; color:#FBF7EC; margin:0; }
+
+  @media (max-width:420px){ .login-card{ padding:26px 20px 22px; } }
 </style>
 </head>
-<body>
+<body class="locked">
 
-<div id="loginScreen">
-  <div class="card login-card" id="loginCard">
-    <div class="login-badge">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-        <rect x="4" y="10" width="16" height="10" rx="2"/>
-        <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+<div id="loginGate">
+  <div class="lg-ornament tl"></div>
+  <div class="lg-ornament br"></div>
+
+  <div class="lg-stage">
+    <span class="lg-eyebrow">Restricted Access</span>
+    <div class="lg-brand">
+      <div class="lg-seal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+          <path d="M12 3l7 3.5v5c0 4.5-3 8.5-7 9.5-4-1-7-5-7-9.5v-5L12 3z"/>
+          <path d="M9.5 12l1.8 1.8L14.5 10" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2>سجلّ الدرجات الموحّد</h2>
+      <p>كلية التكنولوجيا الصحية التطبيقية · يرجى إدخال الرقم السري للمتابعة</p>
+    </div>
+
+    <div class="login-card" id="loginCard">
+      <form id="loginForm" autocomplete="off">
+        <div class="lg-field">
+          <label for="loginPassInput">الرقم السري</label>
+          <div class="lg-pass-wrap">
+            <svg class="lg-icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="5" y="10.5" width="14" height="9" rx="2"/>
+              <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" stroke-linecap="round"/>
+            </svg>
+            <input type="password" id="loginPassInput" inputmode="numeric" placeholder="••••••••" maxlength="12" autocomplete="off">
+            <button type="button" class="lg-toggle-eye" id="lgToggleEye" aria-label="إظهار/إخفاء">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" id="lgEyeIcon">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="lg-error-msg" id="loginError">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 8v5M12 16h.01" stroke-linecap="round"/>
+            </svg>
+            <span>الرقم السري غير صحيح، حاول مرة أخرى</span>
+          </div>
+        </div>
+
+        <button type="submit" class="lg-btn" id="loginSubmitBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h11m0 0-4-4m4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 5v-.5A1.5 1.5 0 0 0 11.5 3h-6A1.5 1.5 0 0 0 4 4.5v15A1.5 1.5 0 0 0 5.5 21h6a1.5 1.5 0 0 0 1.5-1.5V19" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          دخول
+        </button>
+      </form>
+      <p class="lg-hint">هذا السجلّ محمي بكلمة مرور، للمستخدمين المصرّح لهم فقط</p>
+    </div>
+
+    <footer class="lg-foot">SANAD REGISTRY LEDGER</footer>
+  </div>
+
+  <div class="lg-success-overlay" id="lgSuccessOverlay">
+    <div class="lg-stamp">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+        <path d="M5 12.5l4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <h2>سجلّ الدرجات الموحّد</h2>
-    <p class="desc">هذه الصفحة مخصصة للاستخدام الإداري فقط.<br>الرجاء إدخال كلمة المرور للمتابعة.</p>
-    <form id="loginForm" autocomplete="off">
-      <div class="login-field">
-        <input type="password" id="loginPass" inputmode="numeric" placeholder="••••••••" autocomplete="off">
-      </div>
-      <button type="submit" class="btn btn-gold" style="width:100%;">دخول</button>
-      <p class="login-error" id="loginError">كلمة المرور غير صحيحة، حاول مرة أخرى.</p>
-    </form>
+    <p>تم التحقق بنجاح، جارٍ الدخول…</p>
   </div>
 </div>
 
-<div id="appRoot">
+<script>
+  (function(){
+    const CORRECT_PASSWORD = "0000000"; // غيّر الرقم السري هنا
+    const gate = document.getElementById('loginGate');
+    const form = document.getElementById('loginForm');
+    const input = document.getElementById('loginPassInput');
+    const card = document.getElementById('loginCard');
+    const errorEl = document.getElementById('loginError');
+    const toggleEye = document.getElementById('lgToggleEye');
+    const eyeIcon = document.getElementById('lgEyeIcon');
+    const successOverlay = document.getElementById('lgSuccessOverlay');
+    const submitBtn = document.getElementById('loginSubmitBtn');
+
+    toggleEye.addEventListener('click', () => {
+      const isPass = input.type === 'password';
+      input.type = isPass ? 'text' : 'password';
+      eyeIcon.innerHTML = isPass
+        ? '<path d="M3 3l18 18" stroke-linecap="round"/><path d="M10.6 10.6a3 3 0 0 0 4.24 4.24"/><path d="M6.7 6.7C4.4 8.2 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.5 4.9-1.3M17.3 17.3C19.6 15.8 22 12 22 12s-1.1-2.2-3-4"/>'
+        : '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>';
+    });
+
+    input.addEventListener('input', () => {
+      errorEl.classList.remove('show');
+      input.style.borderColor = '';
+    });
+
+    function tryLogin(e){
+      if(e) e.preventDefault();
+      if(input.value === CORRECT_PASSWORD){
+        submitBtn.disabled = true;
+        errorEl.classList.remove('show');
+        successOverlay.classList.add('show');
+        setTimeout(() => {
+          gate.classList.add('hidden');
+          document.body.classList.remove('locked');
+        }, 900);
+      } else {
+        errorEl.classList.add('show');
+        input.style.borderColor = 'var(--stamp-red)';
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+        input.value = '';
+        input.focus();
+      }
+    }
+    form.addEventListener('submit', tryLogin);
+    window.addEventListener('load', () => input.focus());
+  })();
+</script>
 
 <header class="hero">
   <div class="eyebrow">أرشيف الشؤون الأكاديمية · كلية التكنولوجيا الصحية التطبيقية</div>
@@ -1764,7 +1908,7 @@
         <span>Page ${pageNum} of ${totalPages}</span>
       </div>`;
 
-    const pageHeadHtml = (pageNum, totalPages) => `<div class="t-page2-head"><span><span class="mirror-field" data-mirror="name">${escapeHtml(s.name)}</span> &nbsp;·&nbsp; <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span></span><span>Page ${pageNum} of ${totalPages}</span></div>`;
+    const pageHeadHtml = (pageNum, totalPages, isFirst) => `<div class="t-page2-head${isFirst ? ' no-line' : ''}"><span><span class="mirror-field" data-mirror="name">${escapeHtml(s.name)}</span> &nbsp;·&nbsp; <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span></span><span>Page ${pageNum} of ${totalPages}</span></div>`;
 
     const semesterHtmls = sems.map(renderSemester);
 
@@ -1781,7 +1925,7 @@
 
     const pagesHtml = pages.map((p, idx) => `
       <div class="t-page" data-page="${idx + 1}">
-        ${pageHeadHtml(idx + 1, pages.length)}
+        ${p.isFirst ? '' : pageHeadHtml(idx + 1, pages.length, p.isFirst)}
         ${p.isFirst ? headHtml : ''}
         ${p.blocks.join('')}
         ${footHtml(idx + 1, pages.length)}
@@ -1841,7 +1985,7 @@
 
     function startFreshPage(){
       pageDiv.innerHTML = '';
-      appendHtml(pageHeadHtml(1, 1));
+      if(!isFirstPage) appendHtml(pageHeadHtml(1, 1, isFirstPage));
       if(isFirstPage) appendHtml(headHtml);
     }
     startFreshPage();
@@ -1976,49 +2120,5 @@
   tryRestoreSavedSession();
 })();
 </script>
-
-</div>
-
-<script>
-(function(){
-  const CORRECT_PASSWORD = "0000000";
-  const SESSION_KEY = "gradesRegistryAuthed";
-
-  const loginScreen = document.getElementById('loginScreen');
-  const loginCard   = document.getElementById('loginCard');
-  const loginForm   = document.getElementById('loginForm');
-  const loginPass   = document.getElementById('loginPass');
-  const loginError  = document.getElementById('loginError');
-  const appRoot     = document.getElementById('appRoot');
-
-  function grantAccess(){
-    loginScreen.classList.add('hide');
-    appRoot.classList.add('show');
-  }
-
-  // إذا كان الدخول قد تم بالفعل في هذه الجلسة، لا داعي لطلبه مجددًا
-  if(sessionStorage.getItem(SESSION_KEY) === "1"){
-    grantAccess();
-  } else {
-    setTimeout(()=> loginPass.focus(), 200);
-  }
-
-  loginForm.addEventListener('submit', function(e){
-    e.preventDefault();
-    if(loginPass.value === CORRECT_PASSWORD){
-      sessionStorage.setItem(SESSION_KEY, "1");
-      grantAccess();
-    } else {
-      loginError.classList.add('show');
-      loginCard.classList.remove('shake');
-      void loginCard.offsetWidth; // إعادة تشغيل الأنيميشن
-      loginCard.classList.add('shake');
-      loginPass.value = "";
-      loginPass.focus();
-    }
-  });
-})();
-</script>
-
 </body>
 </html>

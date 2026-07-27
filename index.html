@@ -403,6 +403,20 @@
     text-transform:uppercase;letter-spacing:.04em;line-height:1.4;
   }
 
+  /* Secondary signature block, appended after the main signatures */
+  .t-travel-auth{
+    margin-top:46px;
+    break-inside:avoid; page-break-inside:avoid;
+  }
+  .t-travel-auth .t-travel-title{
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:10.5px;color:#111318;
+    text-align:center;text-transform:uppercase;letter-spacing:.12em;
+    padding:6px 0;margin:0 0 20px;
+  }
+  .t-travel-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:20px;
+  }
+
   .t-foot{
     margin-top:26px;padding-top:10px;border-top:1px solid #d5d5d5;
     display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
@@ -427,6 +441,54 @@
   .print-metrics .t-signatures{ margin-top:24px; }
   .print-metrics .t-sig .line{ margin:24px 6px 7px; }
   .print-metrics .t-foot{ margin-top:18px; padding-top:8px; }
+
+  /* ---- Auto-shrink levels ----
+     Applied to the whole .transcript (both the real page and the hidden
+     offscreen measuring clone) when a student's content doesn't fit the
+     target page count at normal size. Each level is a bit tighter than
+     the last; paginateTranscriptBlocks() picks the least-aggressive level
+     that still fits everything into TARGET_PAGE_COUNT pages. */
+  .transcript.shrink-1{ font-size:10.6px; padding:34px 36px 24px; }
+  .transcript.shrink-1 .t-head{ padding-top:11mm; padding-bottom:10px; margin-bottom:14px; }
+  .transcript.shrink-1 .t-semester{ margin-bottom:10px; }
+  .transcript.shrink-1 table.t-table{ font-size:9.8px; line-height:1.35; }
+  .transcript.shrink-1 table.t-table thead th{ padding:5px 7px; }
+  .transcript.shrink-1 table.t-table td{ padding:4.5px 7px; }
+  .transcript.shrink-1 tr.t-total td{ padding:4.5px 7px; }
+  .transcript.shrink-1 .t-summary .box{ padding:9px 8px 8px; }
+  .transcript.shrink-1 .t-signatures{ margin-top:24px; }
+  .transcript.shrink-1 .t-sig .line{ margin:22px 6px 6px; }
+  .transcript.shrink-1 .t-travel-auth{ margin-top:32px; }
+  .transcript.shrink-1 .t-travel-auth .t-travel-title{ margin-bottom:16px; }
+  .transcript.shrink-1 .t-foot{ margin-top:18px; padding-top:8px; }
+
+  .transcript.shrink-2{ font-size:9.8px; padding:26px 28px 18px; }
+  .transcript.shrink-2 .t-head{ padding-top:8mm; padding-bottom:7px; margin-bottom:10px; }
+  .transcript.shrink-2 .t-semester{ margin-bottom:7px; }
+  .transcript.shrink-2 table.t-table{ font-size:9.2px; line-height:1.25; }
+  .transcript.shrink-2 table.t-table thead th{ padding:4px 6px; }
+  .transcript.shrink-2 table.t-table td{ padding:3.5px 6px; }
+  .transcript.shrink-2 tr.t-total td{ padding:3.5px 6px; }
+  .transcript.shrink-2 .t-summary .box{ padding:7px 6px 6px; }
+  .transcript.shrink-2 .t-signatures{ margin-top:18px; }
+  .transcript.shrink-2 .t-sig .line{ margin:16px 6px 5px; }
+  .transcript.shrink-2 .t-travel-auth{ margin-top:22px; }
+  .transcript.shrink-2 .t-travel-auth .t-travel-title{ margin-bottom:12px; }
+  .transcript.shrink-2 .t-foot{ margin-top:12px; padding-top:6px; }
+
+  .transcript.shrink-3{ font-size:9.2px; padding:18px 22px 14px; }
+  .transcript.shrink-3 .t-head{ padding-top:6mm; padding-bottom:5px; margin-bottom:7px; }
+  .transcript.shrink-3 .t-semester{ margin-bottom:5px; }
+  .transcript.shrink-3 table.t-table{ font-size:8.6px; line-height:1.15; }
+  .transcript.shrink-3 table.t-table thead th{ padding:3px 5px; }
+  .transcript.shrink-3 table.t-table td{ padding:2.5px 5px; }
+  .transcript.shrink-3 tr.t-total td{ padding:2.5px 5px; }
+  .transcript.shrink-3 .t-summary .box{ padding:6px 5px 5px; }
+  .transcript.shrink-3 .t-signatures{ margin-top:14px; }
+  .transcript.shrink-3 .t-sig .line{ margin:12px 6px 4px; }
+  .transcript.shrink-3 .t-travel-auth{ margin-top:16px; }
+  .transcript.shrink-3 .t-travel-auth .t-travel-title{ margin-bottom:8px; padding:4px 0; }
+  .transcript.shrink-3 .t-foot{ margin-top:9px; padding-top:5px; }
 
   .t-pagebreak{ page-break-after:always; break-after:page; height:0; margin:0; }
   .t-page2-head{
@@ -1739,7 +1801,11 @@
 
   async function showTranscript(student){
     currentTranscriptStudent = student;
-    transcriptContent.innerHTML = await buildTranscriptHtml(student);
+    const { html, levelClass } = await buildTranscriptHtml(student);
+    // keep the base "transcript" class, swap in whichever shrink level
+    // (if any) was needed to fit the target page count
+    transcriptContent.className = levelClass ? `transcript ${levelClass}` : 'transcript';
+    transcriptContent.innerHTML = html;
     transcriptWrap.style.display = 'block';
     transcriptWrap.scrollIntoView({behavior:'smooth', block:'start'});
     enableTranscriptEditing();
@@ -1901,12 +1967,17 @@
         <div class="t-sig"><div class="line"></div><div class="role">Dean of the Faculty</div></div>
       </div>`;
 
-    const genDate = (()=>{ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${mm}-${dd}`; })();
-    const footHtml = (pageNum, totalPages) => `
-      <div class="t-foot">
-        <span>Doc. Ref: <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span> · Generated ${genDate}</span>
-        <span>Page ${pageNum} of ${totalPages}</span>
+    const travelAuthHtml = `
+      <div class="t-travel-auth">
+        <div class="t-travel-title">Travelling Abroad Authorization</div>
+        <div class="t-travel-grid">
+          <div class="t-sig"><div class="line"></div><div class="role">Graduate Affaires<br>General Administration of Academic and Student Affairs</div></div>
+          <div class="t-sig"><div class="line"></div><div class="role">General Director of General Administration<br>of Academic and Student Affairs</div></div>
+        </div>
       </div>`;
+
+    const genDate = (()=>{ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${mm}-${dd}`; })();
+    const footHtml = (pageNum, totalPages) => '';
 
     const pageHeadHtml = (pageNum, totalPages, isFirst) => `<div class="t-page2-head${isFirst ? ' no-line' : ''}"><span><span class="mirror-field" data-mirror="name">${escapeHtml(s.name)}</span> &nbsp;·&nbsp; <span class="mirror-field" data-mirror="nationalId">${escapeHtml(s.nationalId)}</span></span><span>Page ${pageNum} of ${totalPages}</span></div>`;
 
@@ -1921,7 +1992,7 @@
     // when printing/exporting. Instead we now measure the real rendered
     // height of each block offscreen and split pages wherever the content
     // actually fills up, so nothing ever needs to be shrunk to fit.
-    const pages = await paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, footHtml, pageHeadHtml });
+    const { pages, levelClass } = await paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, travelAuthHtml, footHtml, pageHeadHtml });
 
     const pagesHtml = pages.map((p, idx) => `
       <div class="t-page" data-page="${idx + 1}">
@@ -1931,7 +2002,7 @@
         ${footHtml(idx + 1, pages.length)}
       </div>`).join('<div class="t-pagebreak"></div>');
 
-    return `<div dir="ltr">${pagesHtml}</div>`;
+    return { html: `<div dir="ltr">${pagesHtml}</div>`, levelClass };
   }
 
   async function ensureFontsReady(){
@@ -1940,12 +2011,22 @@
     }
   }
 
+  // How many printed pages a transcript should occupy. If the content
+  // doesn't fit at normal size, we progressively apply the SHRINK_LEVELS
+  // below (tighter fonts/spacing) until it does, rather than letting
+  // extra content spill onto an unwanted extra page.
+  const TARGET_PAGE_COUNT = 3;
+  const SHRINK_LEVELS = ['', 'shrink-1', 'shrink-2', 'shrink-3'];
+
   // Splits semester blocks (plus the trailing summary/signature blocks)
   // across as many pages as are actually needed, by rendering into a
   // hidden offscreen page at the exact printable width used later by
   // capturePageImages(), and watching the real offsetHeight — instead of
-  // assuming a fixed number of blocks fit on each page.
-  async function paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, footHtml, pageHeadHtml }){
+  // assuming a fixed number of blocks fit on each page. Tries each shrink
+  // level in turn and stops at the first (least-aggressive) one that fits
+  // everything into TARGET_PAGE_COUNT pages; if even the most aggressive
+  // level still doesn't fit, that result is used as the best effort.
+  async function paginateTranscriptBlocks({ headHtml, semesterHtmls, summaryHtml, signaturesHtml, travelAuthHtml, footHtml, pageHeadHtml }){
     await ensureFontsReady();
 
     const pxPerMm = 96 / 25.4;
@@ -1954,74 +2035,87 @@
     const usableWidthPx = usableW * pxPerMm;
     const usableHeightPx = usableH * pxPerMm;
 
-    const root = document.createElement('div');
-    root.className = 'transcript';
-    root.style.cssText = `position:absolute; visibility:hidden; pointer-events:none; left:-99999px; top:0; margin:0; padding:0; border:none; box-shadow:none; width:${usableWidthPx}px;`;
-    document.body.appendChild(root);
+    function layoutAtLevel(levelClass){
+      const root = document.createElement('div');
+      root.className = levelClass ? `transcript ${levelClass}` : 'transcript';
+      root.style.cssText = `position:absolute; visibility:hidden; pointer-events:none; left:-99999px; top:0; margin:0; padding:0; border:none; box-shadow:none; width:${usableWidthPx}px;`;
+      document.body.appendChild(root);
 
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 't-page';
-    root.appendChild(pageDiv);
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 't-page';
+      root.appendChild(pageDiv);
 
-    function appendHtml(html){
-      const tmp = document.createElement('div');
-      tmp.innerHTML = html;
-      const nodes = Array.from(tmp.childNodes);
-      nodes.forEach(n => pageDiv.appendChild(n));
-      return nodes;
-    }
-    function removeNodes(nodes){
-      nodes.forEach(n => { if(n.parentNode) n.parentNode.removeChild(n); });
-    }
+      function appendHtml(html){
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        const nodes = Array.from(tmp.childNodes);
+        nodes.forEach(n => pageDiv.appendChild(n));
+        return nodes;
+      }
+      function removeNodes(nodes){
+        nodes.forEach(n => { if(n.parentNode) n.parentNode.removeChild(n); });
+      }
 
-    // constant footer height, reserved on every page's budget
-    pageDiv.innerHTML = '';
-    appendHtml(footHtml(1, 1));
-    const footH = pageDiv.offsetHeight;
-
-    let isFirstPage = true;
-    let pageBlocks = [];
-    const pages = [];
-
-    function startFreshPage(){
+      // constant footer height, reserved on every page's budget
       pageDiv.innerHTML = '';
-      if(!isFirstPage) appendHtml(pageHeadHtml(1, 1, isFirstPage));
-      if(isFirstPage) appendHtml(headHtml);
-    }
-    startFreshPage();
+      appendHtml(footHtml(1, 1));
+      const footH = pageDiv.offsetHeight;
 
-    let i = 0;
-    while(i < semesterHtmls.length){
-      const nodes = appendHtml(semesterHtmls[i]);
-      const fits = pageDiv.offsetHeight <= (usableHeightPx - footH);
-      if(!fits && pageBlocks.length > 0){
-        removeNodes(nodes);
+      let isFirstPage = true;
+      let pageBlocks = [];
+      const pages = [];
+
+      function startFreshPage(){
+        pageDiv.innerHTML = '';
+        if(!isFirstPage) appendHtml(pageHeadHtml(1, 1, isFirstPage));
+        if(isFirstPage) appendHtml(headHtml);
+      }
+      startFreshPage();
+
+      let i = 0;
+      while(i < semesterHtmls.length){
+        const nodes = appendHtml(semesterHtmls[i]);
+        const fits = pageDiv.offsetHeight <= (usableHeightPx - footH);
+        if(!fits && pageBlocks.length > 0){
+          removeNodes(nodes);
+          pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
+          isFirstPage = false;
+          pageBlocks = [];
+          startFreshPage();
+          continue; // retry the same semester on the fresh page
+        }
+        pageBlocks.push(semesterHtmls[i]);
+        i++;
+      }
+
+      // try to fit the summary + signatures onto the last page too
+      const tailHtml = summaryHtml + signaturesHtml + travelAuthHtml;
+      const tailNodes = appendHtml(tailHtml);
+      const tailFits = pageDiv.offsetHeight <= (usableHeightPx - footH);
+      if(!tailFits && pageBlocks.length > 0){
+        removeNodes(tailNodes);
         pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
         isFirstPage = false;
-        pageBlocks = [];
-        startFreshPage();
-        continue; // retry the same semester on the fresh page
+        pageBlocks = [tailHtml];
+      } else {
+        pageBlocks.push(tailHtml);
       }
-      pageBlocks.push(semesterHtmls[i]);
-      i++;
-    }
-
-    // try to fit the summary + signatures onto the last page too
-    const tailHtml = summaryHtml + signaturesHtml;
-    const tailNodes = appendHtml(tailHtml);
-    const tailFits = pageDiv.offsetHeight <= (usableHeightPx - footH);
-    if(!tailFits && pageBlocks.length > 0){
-      removeNodes(tailNodes);
       pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
-      isFirstPage = false;
-      pageBlocks = [tailHtml];
-    } else {
-      pageBlocks.push(tailHtml);
-    }
-    pages.push({ isFirst: isFirstPage, blocks: pageBlocks });
 
-    document.body.removeChild(root);
-    return pages;
+      document.body.removeChild(root);
+      return pages;
+    }
+
+    let chosenPages = null;
+    let chosenLevel = SHRINK_LEVELS[0];
+    for(const level of SHRINK_LEVELS){
+      const pages = layoutAtLevel(level);
+      chosenPages = pages;
+      chosenLevel = level;
+      if(pages.length <= TARGET_PAGE_COUNT) break; // good enough, stop escalating
+    }
+
+    return { pages: chosenPages, levelClass: chosenLevel };
   }
 
   printBtn.addEventListener('click', async ()=>{

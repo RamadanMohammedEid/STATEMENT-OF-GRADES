@@ -348,7 +348,6 @@
   .t-semester h4{
     font-family:'Fraunces',serif;font-weight:600;font-size:13px;color:#111318;
     display:flex;align-items:baseline;gap:8px;margin:0 0 6px;
-    border-bottom:1px solid #111318;padding-bottom:5px;
   }
   .t-semester h4::before{
     content:"§";font-size:11px;color:#666;font-family:'IBM Plex Mono',monospace;
@@ -1624,7 +1623,7 @@
           <td>${c.marks}</td>
         </tr>`).join('');
       semestersHtml += `
-        <h4 style="font-family:Georgia,serif;font-size:13pt;border-bottom:1px solid #111;padding-bottom:4px;margin:14px 0 6px;">${escapeHtml(sem)}</h4>
+        <h4 style="font-family:Georgia,serif;font-size:13pt;margin:14px 0 6px;">${escapeHtml(sem)}</h4>
         <table style="width:100%;border-collapse:collapse;font-size:10pt;" cellpadding="4">
           <thead>
             <tr style="background:#eee;">

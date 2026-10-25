@@ -1005,6 +1005,11 @@
     const saved = await idbGet(DB_KEY);
     if(!saved || !saved.results || !saved.results.length) return;
     results = saved.results;
+    // records saved by the older version hold the drifted local-time date; fix once
+    results.forEach(s => {
+      if(!s.dobFixed && s.dob instanceof Date){ s.dob = normalizeDob(s.dob); }
+      s.dobFixed = true;
+    });
     issues = saved.issues || [];
     seenNationalIds.clear();
     results.forEach(s => { if(s.nationalId) seenNationalIds.set(s.nationalId, s.name || ''); });
@@ -1190,7 +1195,8 @@
         student.nationalId = row[4] != null ? String(row[4]).trim() : null;
         if(!student.program) student.program = c1 || null;
       } else if(/^Date of Birth\//i.test(label3) && student.dob===null){
-        student.dob = row[4] instanceof Date ? row[4] : (row[4] ? String(row[4]) : null);
+        student.dob = row[4] instanceof Date ? normalizeDob(row[4]) : (row[4] ? String(row[4]) : null);
+        student.dobFixed = true;
       }
 
       if(c1 && /semester$/i.test(c1) && !/total/i.test(c1)){
@@ -1322,11 +1328,22 @@
     }
   }
 
+  // SheetJS (cellDates:true) builds the Date in LOCAL time with a few
+  // minutes/hours of drift (DST + historical timezone offsets in Egypt), so
+  // midnight can land on 23:xx of the previous day. Adding 12h before
+  // reading the local Y/M/D absorbs any drift, then the date is stored as a
+  // clean UTC-midnight Date (which is also what ExcelJS expects on export).
+  function normalizeDob(d){
+    if(!(d instanceof Date) || isNaN(d)) return d;
+    const t = new Date(d.getTime() + 12*3600*1000);
+    return new Date(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()));
+  }
+
   function formatDate(d){
     if(!d) return '';
     if(d instanceof Date){
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return `${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      return `${String(d.getUTCDate()).padStart(2,'0')} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
     }
     return String(d);
   }
